@@ -1,0 +1,20 @@
+#!/usr/bin/env ros
+;; -*- mode: lisp; -*-
+(require :asdf)
+
+;; Load local .asd from repo root
+(let* ((root (uiop:getcwd))
+       (asd  (merge-pathnames "cl-vctrs-lite.asd" root)))
+  (asdf:load-asd asd))
+
+(format t "~&[cl-vctrs-lite] running tests...~%")
+
+(handler-case
+    (progn
+      ;; IMPORTANT: test-system (not load-system) so :perform test-op runs
+      (asdf:test-system :cl-vctrs-lite/test)
+      (format t "~&OK~%")
+      (uiop:quit 0))
+  (error (e)
+    (format *error-output* "~&TESTS FAILED: ~a~%" e)
+    (uiop:quit 1)))

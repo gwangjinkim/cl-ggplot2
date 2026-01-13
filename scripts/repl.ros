@@ -1,0 +1,21 @@
+#!/usr/bin/env ros
+;; -*- mode: lisp; -*-
+;; scripts/repl.ros — load local ASDF + system, then stay interactive
+
+(require :asdf)
+
+(let* ((root (uiop:getcwd))
+       (asd  (merge-pathnames "cl-vctrs-lite.asd" root)))
+  (asdf:load-asd asd))
+
+;; If you use Quicklisp, this will work after ASDF knows about the system.
+;; If you don't use Quicklisp, replace with (asdf:load-system :cl-vctrs-lite).
+(handler-case
+    (progn
+      (ql:quickload :cl-vctrs-lite)
+      (format t "~&cl-vctrs-lite loaded. Package: CL-VCTRS-LITE~%"))
+  (error ()
+    (asdf:load-system :cl-vctrs-lite)
+    (format t "~&cl-vctrs-lite loaded via ASDF. Package: CL-VCTRS-LITE~%")))
+
+;; Do not quit; drop into REPL
