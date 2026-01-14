@@ -131,6 +131,9 @@
                                            (case cs-key
                                              (:color (make-instance 'scale-color-discrete :channel :color))
                                              (:fill (make-instance 'scale-fill-discrete :channel :fill))
+                                             (:size (make-instance 'scale-size-continuous :channel :size))
+                                             (:alpha (make-instance 'scale-alpha-continuous :channel :alpha))
+                                             (:shape (make-instance 'scale-shape-discrete :channel :shape))
                                              (t (make-instance 'scale-continuous :channel cs-key)))))
                                    (when (member cs-key '(:x :y))
                                      (when (and (not (typep (gethash cs-key scales) 'scale-discrete))

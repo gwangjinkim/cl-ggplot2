@@ -28,3 +28,26 @@
     (is (= 5.5 (cl-ggplot2::%quantile v 0.5)))
     (is (= 3.25 (cl-ggplot2::%quantile v 0.25)))
     (is (= 7.75 (cl-ggplot2::%quantile v 0.75)))))
+
+(test test-stat-smooth
+  (let* ((data (cl-tibble:tibble :x #(1 2 3 4 5) :y #(2 4 6 8 10)))
+         (p (gg (data (aes :x :x :y :y))
+              (geom_smooth)))
+         (output (render p :device :svg)))
+    ;; OLS for y=2x should have slope 2, intercept 0.
+    ;; Verify we have lines (polylines are drawn as multiple <line> in current renderer)
+    (is (cl-ppcre:scan "<line" output))
+    ;; Check for default smooth color
+    (is (cl-ppcre:scan "stroke=\"#3366cc\"" output))))
+
+(test test-scales-adv
+  (let* ((data (cl-tibble:tibble :x #(1 2 3) :y #(1 2 3) :s #(10 20 30) :a #(0 0.5 1)))
+         (p (gg (data (aes :x :x :y :y :size :s :alpha :a))
+              (geom_point)))
+         (output (render p :device :svg)))
+    ;; Size should map to non-default values (1.0 to 6.0)
+    (is (cl-ppcre:scan "r=\"1.0\"" output)) ; Min size
+    (is (cl-ppcre:scan "r=\"6.0\"" output)) ; Max size
+    ;; Alpha should map to opacity (0.1 to 1.0)
+    (is (cl-ppcre:scan "opacity=\"0.1\"" output)) ; Min alpha
+    (is (cl-ppcre:scan "opacity=\"1.0\"" output)))) ; Max alpha

@@ -284,3 +284,18 @@
                    :mapping mapping
                    :data data
                    :params p)))
+
+(defun geom_smooth (&rest params &key mapping data (method :lm) &allow-other-keys)
+  (declare (ignore method)) ; Only :lm for now
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (remf p :method)
+    ;; Default color for smooth is blue, if not specified
+    (unless (getf p :color) (setf (getf p :color) "#3366cc"))
+    (make-instance 'layer
+                   :geom (make-instance 'geom-line)
+                   :stat (stat_smooth)
+                   :mapping mapping
+                   :data data
+                   :params p)))

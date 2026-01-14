@@ -180,3 +180,49 @@
 
 (defun scale_fill_discrete (&rest args)
   (apply #'make-instance 'scale-fill-discrete :channel :fill args))
+
+;;; --- Size & Alpha (Continuous) ---
+
+(defclass scale-size-continuous (scale-continuous) ())
+(defclass scale-alpha-continuous (scale-continuous) ())
+
+(defmethod scale-map ((s scale-size-continuous) values range-min range-max)
+  (declare (ignore range-min range-max))
+  ;; Default size range [1, 6]
+  (call-next-method s values 1.0 6.0))
+
+(defmethod scale-map ((s scale-alpha-continuous) values range-min range-max)
+  (declare (ignore range-min range-max))
+  ;; Default alpha range [0.1, 1.0]
+  (call-next-method s values 0.1 1.0))
+
+(defun scale_size_continuous (&rest args)
+  (apply #'make-instance 'scale-size-continuous :channel :size args))
+
+(defun scale_alpha_continuous (&rest args)
+  (apply #'make-instance 'scale-alpha-continuous :channel :alpha args))
+
+
+;;; --- Shape (Discrete) ---
+
+(defparameter *default-shape-palette* #(1 2 3 4 5 6)) ; 1:circle (handled by geom_point)
+
+(defclass scale-shape-discrete (scale-discrete) ())
+
+(defmethod scale-map ((s scale-shape-discrete) values range-min range-max)
+  (declare (ignore range-min range-max))
+  (let* ((domain (scale-domain s))
+         (palette *default-shape-palette*)
+         (n-palette (length palette)))
+    (cl-vctrs-lite:col-map
+     (lambda (v)
+       (if (cl-vctrs-lite:na-p v)
+           cl-vctrs-lite:*na*
+           (let ((idx (position v domain :test #'equal)))
+             (if idx
+                 (elt palette (mod idx n-palette))
+                 1)))) ; Default circle
+     values)))
+
+(defun scale_shape_discrete (&rest args)
+  (apply #'make-instance 'scale-shape-discrete :channel :shape args))

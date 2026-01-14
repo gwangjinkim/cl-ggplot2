@@ -18,12 +18,14 @@
    #:geom_tile
    #:geom_histogram
    #:geom_boxplot
+   #:geom_smooth
 
    ;; Stats
    #:stat_identity
    #:stat_count
    #:stat_bin
    #:stat_boxplot
+   #:stat_smooth
 
    ;; Scales
    #:scale-train
@@ -37,6 +39,9 @@
    #:scale_color_discrete
    #:scale_fill_discrete
    #:scale_color_continuous
+   #:scale_size_continuous
+   #:scale_alpha_continuous
+   #:scale_shape_discrete
 
    ;; Positions
    #:position_identity

@@ -135,3 +135,56 @@
 (defun stat_boxplot (&rest params)
   (declare (ignore params))
   (make-instance 'stat-boxplot))
+
+;;; --- Smooth (OLS) ---
+
+(defclass stat-smooth () ())
+
+(defmethod stat-compute ((s stat-smooth) data mapping params)
+  (let* ((x-selector (aes-x mapping))
+         (y-selector (aes-y mapping))
+         (x-col-name (if (keywordp x-selector) (string-downcase (string x-selector)) x-selector))
+         (y-col-name (if (keywordp y-selector) (string-downcase (string y-selector)) y-selector))
+         (x-vals (cl-tibble:tbl-col data x-col-name))
+         (y-vals (cl-tibble:tbl-col data y-col-name))
+         (n (length x-vals))
+         (sum-x 0.0d0) (sum-y 0.0d0) (sum-xy 0.0d0) (sum-x2 0.0d0)
+         (count 0))
+    ;; OLS Calculation
+    (loop for i from 0 below n
+          for x = (aref x-vals i)
+          for y = (aref y-vals i)
+          unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
+          do (let ((xf (coerce x 'double-float))
+                   (yf (coerce y 'double-float)))
+               (incf sum-x xf)
+               (incf sum-y yf)
+               (incf sum-xy (* xf yf))
+               (incf sum-x2 (* xf xf))
+               (incf count)))
+    
+    (if (> count 1)
+        (let* ((x-mean (/ sum-x count))
+               (y-mean (/ sum-y count))
+               (slope (/ (- sum-xy (/ (* sum-x sum-y) count))
+                         (- sum-x2 (/ (* sum-x sum-x) count))))
+               (intercept (- y-mean (* slope x-mean)))
+               ;; Generate sequence for line
+               (x-min (coerce (loop for i from 0 below n for v = (aref x-vals i) unless (cl-vctrs-lite:na-p v) minimize v) 'double-float))
+               (x-max (coerce (loop for i from 0 below n for v = (aref x-vals i) unless (cl-vctrs-lite:na-p v) maximize v) 'double-float))
+               (n-points 100)
+               (step (/ (- x-max x-min) (1- n-points)))
+               (out-x (make-array n-points :element-type 'double-float))
+               (out-y (make-array n-points :element-type 'double-float)))
+          (loop for i from 0 below n-points
+                for cx = (+ x-min (* i step))
+                do (setf (aref out-x i) cx
+                         (aref out-y i) (+ intercept (* slope cx))))
+          (values (cl-tibble:tibble :x out-x :y out-y)
+                  '(:x "x" :y "y")))
+        ;; Fallback
+        (values (cl-tibble:tibble :x #(0) :y #(0)) '(:x "x" :y "y")))))
+
+(defun stat_smooth (&rest params)
+  (declare (ignore params))
+  (make-instance 'stat-smooth))
