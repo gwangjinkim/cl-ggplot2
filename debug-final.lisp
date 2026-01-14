@@ -1,0 +1,10 @@
+(asdf:load-system :cl-ggplot2)
+(in-package #:cl-ggplot2)
+
+(let* ((data (cl-tibble:tibble :x #("A" "A" "B" "B")
+                                :y #(10 20 30 40)
+                                :g #("X" "Y" "X" "Y")))
+         (p (gg (data (aes :x :x :y :y :fill :g))
+              (geom_col :position :dodge)))
+         (output (render p :device :svg)))
+    (format t "Output: ~a~%" output))

@@ -67,6 +67,7 @@
    #:theme_ggplot2_approx
    #:labs
    #:facet_wrap
+   #:facet_grid
 
    ;; Output
    #:render

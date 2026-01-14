@@ -14,6 +14,9 @@
 (defgeneric scale-breaks (scale)
   (:documentation "Return a list of labels for legend/axis."))
 
+(defgeneric scale-clone (scale)
+  (:documentation "Create a fresh copy of the scale for independent training."))
+
 
 ;;; --- Base Scale Class ---
 
@@ -37,9 +40,9 @@
           (v-max nil))
       (loop for i from 0 below (length values)
             for v = (aref values i)
-            unless (cl-vctrs-lite:na-p v)
-            do (setf v-min (if v-min (min v-min v) v)
-                     v-max (if v-max (max v-max v) v)))
+            when (numberp v)
+              do (setf v-min (if v-min (min v-min v) v)
+                       v-max (if v-max (max v-max v) v)))
       (when v-min
         (destructuring-bind (d-min d-max) (scale-domain s)
           (setf (scale-domain s)
@@ -50,16 +53,16 @@
 (defmethod scale-map ((s scale-continuous) values range-min range-max)
   (destructuring-bind (d-min d-max) (or (scale-limits s) (scale-domain s))
     (if (and d-min d-max (/= d-min d-max))
-        (let ((domain-range (- d-max d-min))
-              (output-range (- range-max range-min)))
+        (let ((dm (coerce d-min 'double-float))
+              (domain-range (coerce (- d-max d-min) 'double-float))
+              (output-range (coerce (- range-max range-min) 'double-float)))
           (cl-vctrs-lite:col-map
            (lambda (v)
-             (if (cl-vctrs-lite:na-p v)
+             (if (or (cl-vctrs-lite:na-p v) (not (numberp v)))
                  cl-vctrs-lite:*na*
-                 (+ range-min (* (/ (- v d-min) domain-range) output-range))))
+                 (+ range-min (* (/ (- (coerce v 'double-float) dm) domain-range) output-range))))
            values))
-        ;; Fallback for single value or no data
-        (cl-vctrs-lite:col-map (constantly range-min) values))))
+        (cl-vctrs-lite:col-map (constantly (coerce range-min 'double-float)) values))))
 
 (defun %nice-num (range round)
   (let* ((exponent (floor (log range 10)))
@@ -109,19 +112,22 @@
 
 (defmethod scale-map ((s scale-discrete) values range-min range-max)
   (let* ((domain (scale-domain s))
-         (n (length domain)))
+         (n (length domain))
+         (output-range (coerce (- range-max range-min) 'double-float)))
     (if (> n 0)
-        (let ((step (if (> n 1) (/ (- range-max range-min) (1- n)) 0)))
-          (cl-vctrs-lite:col-map
-           (lambda (v)
-             (if (cl-vctrs-lite:na-p v)
-                 cl-vctrs-lite:*na*
-                 (let ((idx (position v domain :test #'equal)))
-                   (if idx
-                       (+ range-min (* idx step))
-                       cl-vctrs-lite:*na*))))
-           values))
-        (cl-vctrs-lite:col-map (constantly range-min) values))))
+        (cl-vctrs-lite:col-map
+         (lambda (v)
+           (if (cl-vctrs-lite:na-p v)
+               cl-vctrs-lite:*na*
+               (let ((rank (cond ((numberp v) (coerce v 'double-float))
+                                 (t (let ((pos (position v domain :test #'equal)))
+                                      (if pos (coerce (1+ pos) 'double-float) nil))))))
+                 (if rank
+                     (+ range-min (* (/ (- rank 0.5d0) (coerce n 'double-float)) output-range))
+                     cl-vctrs-lite:*na*))))
+         values)
+        ;; Fallback for no data
+        (cl-vctrs-lite:col-map (constantly (coerce range-min 'double-float)) values))))
 
 (defmethod scale-breaks ((s scale-discrete))
   (scale-domain s))
@@ -261,3 +267,34 @@
      values)))
 
 (defun scale_shape_discrete (&rest args) (apply #'make-instance 'scale-shape-discrete :channel :shape args))
+
+;;; --- Cloning ---
+
+(defmethod scale-clone ((s scale-continuous))
+  (make-instance (class-of s)
+                 :channel (scale-channel s)
+                 :name (scale-name s)
+                 :guide (scale-guide s)
+                 :limits (scale-limits s)
+                 :breaks-fn (scale-breaks-fn s)))
+
+(defmethod scale-clone ((s scale-discrete))
+  (make-instance (class-of s)
+                 :channel (scale-channel s)
+                 :name (scale-name s)
+                 :guide (scale-guide s)
+                 :padding (scale-padding s)))
+
+(defmethod scale-clone ((s scale-color-manual))
+  (make-instance (class-of s)
+                 :channel (scale-channel s)
+                 :name (scale-name s)
+                 :guide (scale-guide s)
+                 :values (scale-manual-values s)))
+
+(defmethod scale-clone ((s scale-color-brewer))
+  (make-instance (class-of s)
+                 :channel (scale-channel s)
+                 :name (scale-name s)
+                 :guide (scale-guide s)
+                 :palette (scale-palette-name s)))

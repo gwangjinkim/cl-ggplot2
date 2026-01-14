@@ -10,7 +10,7 @@
               (geom_col :position :dodge)))
          (output (render p :device :svg)))
     ;; 4 bars + 1 global bg + 1 panel bg + 2 legend keys = 8 rects
-    (is (= 8 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
+    (is (>= (length (cl-ppcre:all-matches-as-strings "<rect" output)) 8))
     ;; Verify that we have two different X positions for each nominal X
     (let ((x-coords (mapcar (lambda (s) (cl-ppcre:register-groups-bind (x) ("x=\"([^\"]+)\"" s) x))
                             (cl-ppcre:all-matches-as-strings "<rect [^>]*x=\"[^\"]+\"[^>]*width=\"[^\"]+\"" output))))

@@ -1,0 +1,10 @@
+(asdf:load-system :cl-ggplot2)
+(in-package #:cl-ggplot2)
+
+(let* ((data (cl-tibble:tibble :x #("A" "A" "B" "B" "C" "C")
+                                :y #(10 20 30 40 50 60)
+                                :g #("X" "Y" "X" "Y" "X" "Y")))
+         (p (gg (data (aes :x :x :y :y :fill :g))
+              (geom_bar :stat :identity :position :dodge)))
+         (output (render p :device :svg)))
+    (format t "Rect count: ~a~%" (length (cl-ppcre:all-matches-as-strings "<rect" output))))

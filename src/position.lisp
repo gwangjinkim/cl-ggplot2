@@ -91,19 +91,31 @@
          (n (length x))
          (new-xmin (make-array n :element-type 'double-float :initial-element 0.0d0))
          (new-xmax (make-array n :element-type 'double-float :initial-element 0.0d0))
-         (x-groups (make-hash-table :test 'equal))) ; x -> list of group-indices
+         (x-groups (make-hash-table :test 'equal)) ; x -> list of group-indices
+         (unique-x (remove-duplicates (coerce x 'list) :test 'equal))
+         (x-ranks (make-hash-table :test 'equal)))
 
     ;; 1. Collect groups per X
     (loop for i from 0 below n
           do (push i (gethash (aref x i) x-groups)))
 
-    ;; 2. For each X, distribute groups
+    ;; 2. Determine numeric ranks for X
+    (let ((sorted-x (sort unique-x (lambda (a b) 
+                                     (cond ((and (numberp a) (numberp b)) (< a b))
+                                           ((numberp a) t)
+                                           ((numberp b) nil)
+                                           (t (string< (format nil "~a" a) (format nil "~a" b))))))))
+      (loop for val in sorted-x
+            for i from 1
+            do (setf (gethash val x-ranks) (coerce i 'double-float))))
+
+    ;; 3. For each X, distribute groups
     (maphash (lambda (xi indices)
                (let* ((sorted-indices (sort indices #'string< :key (lambda (idx) (format nil "~a" (aref group idx)))))
                       (m (length sorted-indices))
                       (total-width (coerce (or (position-width p) 0.9d0) 'double-float)) ; default bar width
                       (sub-width (/ total-width m))
-                      (xi-d (coerce xi 'double-float)))
+                      (xi-d (gethash xi x-ranks)))
                  (loop for j from 0 below m
                        for idx = (nth j sorted-indices)
                        for center = (+ (- xi-d (/ total-width 2.0d0)) (* (+ j 0.5d0) sub-width))

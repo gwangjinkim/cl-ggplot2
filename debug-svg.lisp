@@ -1,0 +1,11 @@
+(ql:quickload '(:cl-ggplot2 :cl-ppcre))
+(in-package #:cl-ggplot2)
+
+(let* ((data (cl-tibble:tibble :x #("A" "A" "B" "B")
+                                :y #(10 20 30 40)
+                                :g #("X" "Y" "X" "Y")))
+         (p (gg (data (aes :x :x :y :y :fill :g))
+              (geom_col :position :dodge)))
+         (output (render p :device :svg)))
+    (format t "Rect count: ~a~%" (length (cl-ppcre:all-matches-as-strings "<rect" output)))
+    (format t "Output: ~a~%" output))
