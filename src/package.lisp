@@ -14,6 +14,8 @@
    #:geom_path
    #:geom_line
    #:geom_bar
+   #:geom_col
+   #:geom_tile
    #:geom_histogram
 
    ;; Stats

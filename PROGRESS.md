@@ -94,6 +94,26 @@
 - `src/scale.lisp`
 - `test/scale-discrete-tests.lisp`
 
+## Milestone 7: Geometric Primitives (Bar/Rect) (Completed: 2026-01-14)
+
+### New Features
+- **Stat Count**: New `stat-count` for aggregating non-numeric data into frequencies.
+- **Geom Bar**: Added `geom_bar` for frequency bars and `geom_col` for identity bars.
+- **Geom Tile**: Added `geom_tile` for rectangular areas/heatmaps.
+- **Build Pipeline Upgrades**: The pipeline now supports multi-stage transformations (Stat -> Scale -> Map).
+
+### Verification Results
+- 3 new tests in `test/geom-bar-tests.lisp` covering stat aggregation and area drawing.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/stat.lisp`
+- `src/geom.lisp`
+- `src/build.lisp`
+- `test/geom-bar-tests.lisp`
+
 ## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
 
 ### New Features

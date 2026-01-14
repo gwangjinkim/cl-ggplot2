@@ -9,6 +9,9 @@
 (defgeneric geom-draw (geom layer-data renderer)
   (:documentation "Draw the geom layer using the renderer and mapped data."))
 
+
+;;; --- Point ---
+
 (defclass geom-point () ())
 
 (defmethod geom-required-aes ((g geom-point))
@@ -29,6 +32,9 @@
           unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
           do (r-set-style renderer :fill color :stroke color :opacity alpha)
              (r-circle renderer x y size))))
+
+
+;;; --- Path/Line ---
 
 (defclass geom-path () ())
 
@@ -56,8 +62,63 @@
 
 (defclass geom-line (geom-path) ())
 
-;; geom-line will need build-pipeline to sort by X, 
-;; but for now geom-draw will just inherit from geom-path.
+
+;;; --- Bar/Tile ---
+
+(defclass geom-bar () ())
+
+(defmethod geom-required-aes ((g geom-bar))
+  '(:x :y))
+
+(defmethod geom-default-stat ((g geom-bar))
+  (stat_count))
+
+(defmethod geom-draw ((g geom-bar) layer-data renderer)
+  (let ((x-col (gethash :x layer-data))
+        (y-col (gethash :y layer-data))
+        (fill (or (gethash :fill layer-data) "#3366cc"))
+        (color (or (gethash :color layer-data) "none"))
+        (alpha (or (gethash :alpha layer-data) 1.0))
+        ;; Need width from params or calculated
+        (width (or (gethash :width layer-data) 0.9)))
+    ;; In mapped terms, width of 0.9 means 90% of the gap between categories
+    ;; But here we are already in pixel space. For now, assume a fixed pixel width
+    ;; or calculate it from the scale. 
+    ;; Hack: if x-col has > 1 point, use 80% of gap. Else use 40px.
+    (let* ((px-width (if (> (length x-col) 1)
+                         (* width (abs (- (aref x-col 1) (aref x-col 0))))
+                         40.0))
+           (y-axis-pos (- (r-height renderer) 50)))
+      (loop for i from 0 below (length x-col)
+            for x = (aref x-col i)
+            for y = (aref y-col i)
+            unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
+            do (r-set-style renderer :fill fill :stroke color :opacity alpha)
+               (r-rect renderer (- x (/ px-width 2)) y 
+                       px-width (abs (- y-axis-pos y)))))))
+
+(defclass geom-tile () ())
+
+(defmethod geom-required-aes ((g geom-tile))
+  '(:x :y))
+
+(defmethod geom-default-stat ((g geom-tile))
+  (stat_identity))
+
+(defmethod geom-draw ((g geom-tile) layer-data renderer)
+  (let ((x-col (gethash :x layer-data))
+        (y-col (gethash :y layer-data))
+        (fill (or (gethash :fill layer-data) "red"))
+        (width 20.0)
+        (height 20.0))
+    (loop for i from 0 below (length x-col)
+          for x = (aref x-col i)
+          for y = (aref y-col i)
+          do (r-set-style renderer :fill fill :stroke "none")
+             (r-rect renderer (- x (/ width 2)) (- y (/ height 2)) width height))))
+
+
+;;; --- Constructors ---
 
 (defun geom_point (&rest params &key mapping data &allow-other-keys)
   (let ((p (copy-list params)))
@@ -65,7 +126,7 @@
     (remf p :data)
     (make-instance 'layer
                    :geom (make-instance 'geom-point)
-                   :stat (geom-default-stat (make-instance 'geom-point))
+                   :stat (stat_identity)
                    :mapping mapping
                    :data data
                    :params p)))
@@ -87,6 +148,40 @@
     (remf p :data)
     (make-instance 'layer
                    :geom (make-instance 'geom-line)
+                   :stat (stat_identity)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_bar (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-bar)
+                   :stat (stat_count)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_col (&rest params &key mapping data &allow-other-keys)
+  "Alias for geom_bar with stat_identity."
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-bar)
+                   :stat (stat_identity)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_tile (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-tile)
                    :stat (stat_identity)
                    :mapping mapping
                    :data data
