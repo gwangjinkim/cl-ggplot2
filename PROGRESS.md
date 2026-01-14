@@ -216,3 +216,93 @@
 - `src/build.lisp`
 - `src/geom.lisp`
 - `test/facet-tests.lisp`
+## Milestone 13: Position Adjustments (Completed: 2026-01-14)
+
+### New Features
+- **Position Protocol**: Added `position-adjust` for modifying geom positioning (e.g., dodging, stacking).
+- **Position Dodge**: Implemented `position_dodge` for side-by-side categorical bars.
+- **Position Fill**: Implemented `position_fill` for 100% stacked bars.
+- **Geom Bar Integration**: Updated `geom_bar` and `geom_col` to respect position adjustments.
+
+### Verification Results
+- 2 new tests in `test/position-tests.lisp` covering dodge and fill logic.
+- All tests pass (`make test`).
+
+### Touched Files
+- `src/package.lisp`
+- `src/position.lisp`
+- `src/build.lisp`
+- `test/position-tests.lisp`
+
+## Milestone 14: Coordinate Systems (Basics) (Completed: 2026-01-14)
+
+### New Features
+- **Coord Protocol**: Added `coord-map-scales` and `coord-transform-mapped` for layout flexibility.
+- **Coord Flip**: Implemented `coord_flip` to swap X and Y axes.
+- **Coord Fixed**: Implemented `coord_fixed` to maintain a specific aspect ratio between axes.
+
+### Verification Results
+- 2 new tests in `test/coord-tests.lisp` verifying flipping and fixed-ratio rendering.
+- All tests pass.
+
+### Touched Files
+- `src/package.lisp`
+- `src/coord.lisp`
+- `src/build.lisp`
+- `test/coord-tests.lisp`
+
+## Milestone 15: Advanced Stats & Aesthetics (Completed: 2026-01-14)
+
+### New Features
+- **Aesthetic Support**: Added `size`, `shape`, and `alpha` aesthetics to all relevant geoms.
+- **Continuous Alpha/Size**: Added `scale_size_continuous` and `scale_alpha_continuous`.
+- **Stat Smooth**: Implemented `stat_smooth` with `:lm` (linear regression) method.
+- **Type Coercion**: Improved stability of stat computations with explicit floating-point coercion.
+
+### Verification Results
+- 2 new tests in `test/scale-tests.lisp` and `test/stat-tests.lisp`.
+- All tests pass.
+
+### Touched Files
+- `src/package.lisp`
+- `src/scale.lisp`
+- `src/stat.lisp`
+- `src/geom.lisp`
+
+## Milestone 16: Legends & Color Palettes (Completed: 2026-01-14)
+
+### New Features
+- **Automatic Legends**: Non-XY aesthetics (color, fill, size, alpha) now automatically generate legends.
+- **Layout Management**: Reserved 120px on the right for legends, adjusting plotting area accordingly.
+- **Color Palettes**: Added `scale_color_brewer` (Set1, Dark2, Paired) and manual color/fill scales.
+- **Renderer Polish**: Added `font-weight` support to SVG text for better legend typography.
+
+### Verification Results
+- 3 new tests in `test/legend-tests.lisp`.
+- Updated existing tests to reflect new plot dimensions.
+
+### Touched Files
+- `src/package.lisp`
+- `src/scale.lisp`
+- `src/build.lisp`
+- `src/renderer.lisp`
+- `test/legend-tests.lisp`
+
+## Milestone 17: Annotations (Completed: 2026-01-14)
+
+### New Features
+- **Annotate Helper**: Added `annotate()` for adding static elements to plots with arbitrary data.
+- **New Annotation Geoms**: Implemented `geom_text`, `geom_segment`, and `geom_rect`.
+- **Mapping Extension**: Added `label`, `xend`, and `yend` to standard aesthetics.
+- **Build Pipeline Scaling**: Coordinates for annotations are now correctly trained and mapped across the global scale system.
+
+### Verification Results
+- 3 new tests in `test/annotation-tests.lisp`.
+- All 26 tests in the suite are passing.
+
+### Touched Files
+- `src/package.lisp`
+- `src/core.lisp`
+- `src/geom.lisp`
+- `src/build.lisp`
+- `test/annotation-tests.lisp`

@@ -517,15 +517,16 @@ Implement:
 - `stat_smooth` (LM/linear regression)
 - `scale_size`, `scale_shape`, `scale_alpha`
 
-### M14 — Legends & Color Palettes
+### M16 — Legends & Color Palettes
 Implement:
 - multi-legend layout (combining color, size, etc.)
-- integration with `cl-colors` or similar for Viridis/ColorBrewer
+- `scale_color_brewer`, `scale_color_manual` and friends
+- automatic legend generation for non-XY aesthetics
 
-### M15 — Annotations
+### M17 — Annotations
 Implement:
 - `annotate` function for manual additions
-- `geom_text` for label mapping
+- `geom_text`, `geom_segment`, `geom_rect`
 
 ---
 
