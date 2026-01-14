@@ -5,6 +5,7 @@
    #:ggplot
    #:aes
    #:-+
+   #:apply-to-plot
    #:gg
    #:with-plot
 
