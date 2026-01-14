@@ -11,6 +11,7 @@
 
    ;; Geoms
    #:geom_point
+   #:geom_path
    #:geom_line
    #:geom_bar
    #:geom_histogram

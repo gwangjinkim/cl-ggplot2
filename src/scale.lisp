@@ -67,6 +67,51 @@
 (defmethod scale-breaks ((s scale-continuous))
   (funcall (scale-breaks-fn s) (or (scale-limits s) (scale-domain s))))
 
+
+;;; --- Scale Discrete ---
+
+(defclass scale-discrete ()
+  ((channel :initarg :channel :accessor scale-channel)
+   (name :initarg :name :initform nil :accessor scale-name)
+   (domain :initform nil :accessor scale-domain) ; List of unique values
+   (padding :initarg :padding :initform 0.5 :accessor scale-padding)))
+
+(defmethod scale-train ((s scale-discrete) values)
+  (when (and values (> (length values) 0))
+    (let ((current (scale-domain s)))
+      (loop for i from 0 below (length values)
+            for v = (aref values i)
+            unless (or (cl-vctrs-lite:na-p v) (member v current :test #'equal))
+            do (setf current (append current (list v))))
+      (setf (scale-domain s) current)))
+  s)
+
+(defmethod scale-map ((s scale-discrete) values range-min range-max)
+  (let* ((domain (scale-domain s))
+         (n (length domain))
+         (padding (scale-padding s)))
+    (if (> n 0)
+        (let* ((total-units (+ n (* 2 (- padding 0.5)) 0)) ; Simple version: each category is 1 unit
+               ;; range = [min, max]
+               ;; Categorical positions are 1, 2, ..., n
+               ;; We map 1 to min + offset, n to max - offset
+               (step (if (> n 1) (/ (- range-max range-min) (1- n)) 0)))
+          (cl-vctrs-lite:col-map
+           (lambda (v)
+             (if (cl-vctrs-lite:na-p v)
+                 cl-vctrs-lite:*na*
+                 (let ((idx (position v domain :test #'equal)))
+                   (if idx
+                       (+ range-min (* idx step))
+                       cl-vctrs-lite:*na*))))
+           values))
+        (cl-vctrs-lite:col-map (constantly range-min) values))))
+
+(defmethod scale-breaks ((s scale-discrete))
+  (loop for v in (scale-domain s)
+        collect (list v (format nil "~a" v))))
+
+
 ;;; --- Constructors ---
 
 (defun scale_x_continuous (&rest args)
@@ -74,3 +119,9 @@
 
 (defun scale_y_continuous (&rest args)
   (apply #'make-instance 'scale-continuous :channel :y args))
+
+(defun scale_x_discrete (&rest args)
+  (apply #'make-instance 'scale-discrete :channel :x args))
+
+(defun scale_y_discrete (&rest args)
+  (apply #'make-instance 'scale-discrete :channel :y args))

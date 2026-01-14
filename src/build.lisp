@@ -53,9 +53,14 @@
                     (when (typep (layer-geom l) 'geom-line)
                       (let* ((x-vals (gethash :x mapped-data))
                              (y-vals (gethash :y mapped-data))
-                             (indices (cl-vctrs-lite:with-na-handling ; just in case
-                                        (let ((idx (loop for i from 0 below (length x-vals) collect i)))
-                                          (sort idx #'< :key (lambda (i) (aref x-vals i))))))
+                             ;; Sort indices by X value, handling NAs (sort NAs to the end or just skip)
+                             (indices (let ((idx (loop for i from 0 below (length x-vals) collect i)))
+                                        (sort idx (lambda (a b)
+                                                    (let ((va (aref x-vals a))
+                                                          (vb (aref x-vals b)))
+                                                      (cond ((cl-vctrs-lite:na-p va) nil)
+                                                            ((cl-vctrs-lite:na-p vb) t)
+                                                            (t (< va vb))))))))
                              (new-x (make-array (length x-vals) :element-type (array-element-type x-vals)))
                              (new-y (make-array (length y-vals) :element-type (array-element-type y-vals))))
                         (loop for i from 0 for original-idx in indices

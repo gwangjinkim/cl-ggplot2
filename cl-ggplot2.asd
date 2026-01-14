@@ -33,6 +33,7 @@
                  (:file "render-svg-tests")
                  (:file "scale-tests")
                  (:file "build-tests")
-                 (:file "geom-line-tests"))))
+                 (:file "geom-line-tests")
+                 (:file "scale-discrete-tests"))))
   :perform (asdf:test-op (op c)
                          (uiop:symbol-call :fiveam :run! :cl-ggplot2)))

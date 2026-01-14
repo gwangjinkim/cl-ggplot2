@@ -77,3 +77,21 @@
 - `src/geom.lisp`
 - `src/build.lisp`
 - `test/build-tests.lisp`
+
+## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
+
+### New Features
+- **Geom Path**: Added `geom_path` for drawing connected sequences of points.
+- **Geom Line**: Added `geom_line` which automatically sorts data by the X aesthetic before drawing.
+- **NA Handling in Paths**: Paths and lines correctly break at points containing `*na*`.
+
+### Verification Results
+- 2 new tests in `test/geom-line-tests.lisp` verifying path order and line sorting.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/geom.lisp`
+- `src/build.lisp`
+- `test/geom-line-tests.lisp`
