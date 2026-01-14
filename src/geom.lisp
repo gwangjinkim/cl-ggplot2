@@ -120,6 +120,45 @@
           do (r-set-style renderer :fill fill :stroke "none")
              (r-rect renderer (- x (/ width 2)) (- y (/ height 2)) width height))))
 
+;;; --- Boxplot ---
+
+(defclass geom-boxplot () ())
+
+(defmethod geom-required-aes ((g geom-boxplot))
+  '(:y))
+
+(defmethod geom-default-stat ((g geom-boxplot))
+  (stat_boxplot))
+
+(defmethod geom-draw ((g geom-boxplot) layer-data renderer)
+  (let* ((x-col (gethash :x layer-data))
+         (y-col (gethash :y layer-data)) ; Median
+         (lower-col (gethash :lower layer-data))
+         (upper-col (gethash :upper layer-data))
+         (ymin-col (gethash :ymin layer-data))
+         (ymax-col (gethash :ymax layer-data)))
+    (loop for i from 0 below (length x-col)
+          for x = (aref x-col i)
+          for mid = (aref y-col i)
+          for lower = (aref lower-col i)
+          for upper = (aref upper-col i)
+          for ymin = (aref ymin-col i)
+          for ymax = (aref ymax-col i)
+          for fill = (%get-val layer-data :fill i "white")
+          for color = (%get-val layer-data :color i "black")
+          for alpha = (%get-val layer-data :alpha i 1.0)
+          for width = (%get-val layer-data :width i 40.0)
+          unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p mid))
+          do (r-set-style renderer :fill fill :stroke color :opacity alpha :stroke-width 2)
+             ;; Whiskers
+             (r-line renderer x ymin x lower)
+             (r-line renderer x upper x ymax)
+             ;; Box
+             (r-rect renderer (- x (/ width 2)) upper width (- lower upper))
+             ;; Median line
+             (r-set-style renderer :stroke color :stroke-width 3)
+             (r-line renderer (- x (/ width 2)) mid (+ x (/ width 2)) mid))))
+
 
 ;;; --- Constructors ---
 
@@ -167,6 +206,17 @@
                    :data data
                    :params p)))
 
+(defun geom_histogram (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-bar)
+                   :stat (stat_bin)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
 (defun geom_col (&rest params &key mapping data &allow-other-keys)
   "Alias for geom_bar with stat_identity."
   (let ((p (copy-list params)))
@@ -186,6 +236,17 @@
     (make-instance 'layer
                    :geom (make-instance 'geom-tile)
                    :stat (stat_identity)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_boxplot (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-boxplot)
+                   :stat (stat_boxplot)
                    :mapping mapping
                    :data data
                    :params p)))

@@ -1,5 +1,16 @@
 (in-package #:cl-ggplot2)
 
+(defun %aes-slot-name (aes-key)
+  (case aes-key
+    (:x 'x) (:y 'y) (:color 'color) (:fill 'fill)
+    (:size 'size) (:alpha 'alpha) (:shape 'shape) (:linetype 'linetype)
+    (:group 'group) (:width 'width)
+    (:xmin 'xmin) (:xmax 'xmax) (:ymin 'ymin) (:ymax 'ymax)
+    (:middle 'middle) (:lower 'lower) (:upper 'upper)
+    (t (if (keywordp aes-key)
+           (intern (string aes-key) (find-package :cl-ggplot2))
+           aes-key))))
+
 (defun build-plot (plot width height)
   "Bridges the gap between plot specification and rendering instructions."
   (let* ((data (plot-data plot))
@@ -19,11 +30,11 @@
                       ;; Merge changed aesthetics into mapping
                       (let ((final-mapping (make-instance 'mapping)))
                         ;; Copy from l-mapping
-                        (dolist (slot '(x y color fill size shape alpha group linetype))
+                        (dolist (slot '(x y color fill size shape alpha group linetype xmin xmax ymin ymax middle lower upper))
                           (setf (slot-value final-mapping slot) (slot-value l-mapping slot)))
                         ;; Apply changes from stat
                         (loop for (aes-key col-name) on changed-aes by #'cddr
-                              do (setf (slot-value final-mapping (case aes-key (:x 'x) (:y 'y) (t aes-key))) col-name))
+                              do (setf (slot-value final-mapping (%aes-slot-name aes-key)) col-name))
                         (list :layer l :data transformed-data :mapping final-mapping)))))))
 
       ;; 2. Initialize and Train scales
@@ -34,11 +45,13 @@
         (let ((l-data (getf pl :data))
               (l-mapping (getf pl :mapping))
               (l (getf pl :layer)))
-          (dolist (channel '(:x :y :color :fill :size :alpha :shape :linetype))
-            (let ((col-selector (slot-value l-mapping (case channel
-                                                       (:x 'x) (:y 'y) (:color 'color) (:fill 'fill)
-                                                       (:size 'size) (:alpha 'alpha) (:shape 'shape) (:linetype 'linetype))))
-                  (constant-override (getf (layer-params l) channel)))
+          (dolist (channel '(:x :y :color :fill :size :alpha :shape :linetype :xmin :xmax :ymin :ymax :middle :lower :upper))
+            (let* ((cs-key (case channel
+                             ((:xmin :xmax) :x)
+                             ((:ymin :ymax :middle :lower :upper) :y)
+                             (t channel)))
+                   (col-selector (slot-value l-mapping (%aes-slot-name channel)))
+                   (constant-override (getf (layer-params l) channel)))
               ;; Only train scale if there is a mapping AND no constant override in this layer
               (when (and col-selector (not constant-override))
                 (let* ((col-name (if (keywordp col-selector) 
@@ -47,22 +60,22 @@
                        (values (cl-tibble:tbl-col l-data col-name)))
                   
                   ;; Auto-create scale if missing
-                  (unless (gethash channel scales)
-                    (setf (gethash channel scales)
-                          (case channel
+                  (unless (gethash cs-key scales)
+                    (setf (gethash cs-key scales)
+                          (case cs-key
                             (:color (make-instance 'scale-color-discrete :channel :color))
                             (:fill (make-instance 'scale-fill-discrete :channel :fill))
-                            (t (make-instance 'scale-continuous :channel channel)))))
+                            (t (make-instance 'scale-continuous :channel cs-key)))))
 
                   ;; Upgrade scale to discrete if data is non-numeric (for X and Y)
-                  (when (member channel '(:x :y))
-                    (when (and (not (typep (gethash channel scales) 'scale-discrete))
+                  (when (member cs-key '(:x :y))
+                    (when (and (not (typep (gethash cs-key scales) 'scale-discrete))
                                (loop for i from 0 below (min 10 (length values))
                                      for v = (aref values i)
                                      thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
-                      (setf (gethash channel scales) (make-instance 'scale-discrete :channel channel))))
+                      (setf (gethash cs-key scales) (make-instance 'scale-discrete :channel cs-key))))
                   
-                  (scale-train (gethash channel scales) values)))))))
+                  (scale-train (gethash cs-key scales) values)))))))
 
       ;; 3. Map data to coordinates
       (let ((built-layers
@@ -74,10 +87,8 @@
                            (mapped-data (make-hash-table)))
                       
                       ;; Resolve all aesthetics
-                      (dolist (c '(:x :y :color :fill :size :alpha :shape :linetype))
-                        (let ((selector (slot-value l-mapping (case c
-                                                                (:x 'x) (:y 'y) (:color 'color) (:fill 'fill)
-                                                                (:size 'size) (:alpha 'alpha) (:shape 'shape) (:linetype 'linetype))))
+                      (dolist (c '(:x :y :color :fill :size :alpha :shape :linetype :xmin :xmax :ymin :ymax :middle :lower :upper))
+                        (let ((selector (slot-value l-mapping (%aes-slot-name c)))
                               (constant (getf (layer-params l) c)))
                           (cond 
                             ;; 1. Constant override in layer
@@ -89,11 +100,15 @@
                                                   (string-downcase (string selector))
                                                   selector))
                                     (vals (cl-tibble:tbl-col l-data col-name))
-                                    (scale (gethash c scales)))
+                                    (scale (gethash (case c 
+                                                      ((:xmin :xmax) :x)
+                                                      ((:ymin :ymax :middle :lower :upper) :y)
+                                                      (t c))
+                                                    scales)))
                                (setf (gethash c mapped-data)
                                      (case c
-                                       (:x (scale-map scale vals margin (- width margin)))
-                                       (:y (scale-map scale vals (- height margin) margin))
+                                       ((:x :xmin :xmax) (scale-map scale vals margin (- width margin)))
+                                       ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (- height margin) margin))
                                        (t (scale-map scale vals 0 1))))))
                             ;; 3. No mapping, no constant
                             (t nil))))

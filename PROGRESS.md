@@ -153,7 +153,28 @@
 - `src/stat.lisp`
 - `src/build.lisp`
 - `src/geom.lisp`
-- `test/scale-color-tests.lisp`
+- `test/geom-stat-adv-tests.lisp`
+
+## Milestone 10: Additional Geoms (Histogram, Boxplot) (Completed: 2026-01-14)
+
+### New Features
+- **Histograms**: `geom_histogram` with `stat_bin`. Supports `:bins` parameter.
+- **Boxplots**: `geom_boxplot` with `stat_boxplot`. Computes and renders median, hinges (25/75th percentiles), and whiskers.
+- **Secondary Aesthetic Mapping**: `build-plot` now correctly maps and trains scales for `xmin`, `xmax`, `ymin`, `ymax`, `middle`, `lower`, and `upper`.
+- **Aesthetic Slot Robustness**: Improved `slot-value` handling for aesthetic keywords in the build pipeline.
+
+### Verification Results
+- 3 new tests in `test/geom-stat-adv-tests.lisp` for binning, quantiles, and rendering.
+- All 15+ tests pass (`make test`).
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/core.lisp`
+- `src/stat.lisp`
+- `src/build.lisp`
+- `src/geom.lisp`
+- `test/geom-stat-adv-tests.lisp`
 
 ## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
 

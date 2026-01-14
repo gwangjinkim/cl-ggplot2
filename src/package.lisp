@@ -17,11 +17,13 @@
    #:geom_col
    #:geom_tile
    #:geom_histogram
+   #:geom_boxplot
 
    ;; Stats
    #:stat_identity
    #:stat_count
    #:stat_bin
+   #:stat_boxplot
 
    ;; Scales
    #:scale-train
