@@ -352,18 +352,19 @@ Snapshot: line SVG fixture.
 
 Snapshot: bar SVG fixture.
 
-### M7 — Stat bin (histogram)
-- bin continuous x, produce bar rectangles
+### M9 — Color & Fill Scales (Discrete)
+Deliver default palettes and categorical color mapping.
 
-Snapshot: hist SVG fixture.
+### M10 — More Geoms (Histogram, Boxplot)
+Full histogram and boxplot support with required stats.
 
-### M8 — Themes + ggplot2-ish defaults
-- theme minimal
-- theme_ggplot2_approx (background + grid + axis style)
+### M11 — Renderer & Styling Polish
+Linetypes, legends, and better font control.
 
-Snapshot updates with stable theme.
+### M12 — Faceting
+Deliver `facet_wrap`.
 
-Stop at M8 unless asked.
+Stop here for v0.1 stabilization.
 
 ---
 

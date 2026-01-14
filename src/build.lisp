@@ -7,16 +7,24 @@
          (margin 50)
          (scales (make-hash-table)))
     
-    ;; 1. Stat Computation & Initial Mapping Resolution
+    ;; 1. Stat Computation & Final Mapping Resolution
     (let ((processed-layers
             (loop for l in layers
                   collect
                   (let* ((l-data (or (layer-data l) data))
                          (l-mapping (or (layer-mapping l) (plot-mapping plot)))
                          (l-stat (layer-stat l)))
-                    (multiple-value-bind (transformed-data transformed-mapping)
+                    (multiple-value-bind (transformed-data changed-aes)
                         (stat-compute l-stat l-data l-mapping (layer-params l))
-                      (list :layer l :data transformed-data :mapping transformed-mapping))))))
+                      ;; Merge changed aesthetics into mapping
+                      (let ((final-mapping (make-instance 'mapping)))
+                        ;; Copy from l-mapping
+                        (dolist (slot '(x y color fill size shape alpha group linetype))
+                          (setf (slot-value final-mapping slot) (slot-value l-mapping slot)))
+                        ;; Apply changes from stat
+                        (loop for (aes-key col-name) on changed-aes by #'cddr
+                              do (setf (slot-value final-mapping (case aes-key (:x 'x) (:y 'y) (t aes-key))) col-name))
+                        (list :layer l :data transformed-data :mapping final-mapping)))))))
 
       ;; 2. Initialize and Train scales
       (dolist (c '(:x :y))
@@ -24,22 +32,35 @@
 
       (dolist (pl processed-layers)
         (let ((l-data (getf pl :data))
-              (l-mapping (getf pl :mapping)))
-          (dolist (channel '(:x :y))
-            (let ((col-selector (ecase channel
-                                  (:x (aes-x l-mapping))
-                                  (:y (aes-y l-mapping)))))
-              (when col-selector
+              (l-mapping (getf pl :mapping))
+              (l (getf pl :layer)))
+          (dolist (channel '(:x :y :color :fill :size :alpha :shape :linetype))
+            (let ((col-selector (slot-value l-mapping (case channel
+                                                       (:x 'x) (:y 'y) (:color 'color) (:fill 'fill)
+                                                       (:size 'size) (:alpha 'alpha) (:shape 'shape) (:linetype 'linetype))))
+                  (constant-override (getf (layer-params l) channel)))
+              ;; Only train scale if there is a mapping AND no constant override in this layer
+              (when (and col-selector (not constant-override))
                 (let* ((col-name (if (keywordp col-selector) 
                                      (string-downcase (string col-selector))
                                      col-selector))
                        (values (cl-tibble:tbl-col l-data col-name)))
-                  ;; Upgrade scale to discrete if data is non-numeric
-                  (when (and (not (typep (gethash channel scales) 'scale-discrete))
-                         (loop for i from 0 below (min 10 (length values))
-                               for v = (aref values i)
-                               thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
-                    (setf (gethash channel scales) (make-instance 'scale-discrete :channel channel)))
+                  
+                  ;; Auto-create scale if missing
+                  (unless (gethash channel scales)
+                    (setf (gethash channel scales)
+                          (case channel
+                            (:color (make-instance 'scale-color-discrete :channel :color))
+                            (:fill (make-instance 'scale-fill-discrete :channel :fill))
+                            (t (make-instance 'scale-continuous :channel channel)))))
+
+                  ;; Upgrade scale to discrete if data is non-numeric (for X and Y)
+                  (when (member channel '(:x :y))
+                    (when (and (not (typep (gethash channel scales) 'scale-discrete))
+                               (loop for i from 0 below (min 10 (length values))
+                                     for v = (aref values i)
+                                     thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
+                      (setf (gethash channel scales) (make-instance 'scale-discrete :channel channel))))
                   
                   (scale-train (gethash channel scales) values)))))))
 
@@ -51,21 +72,31 @@
                            (l-data (getf pl :data))
                            (l-mapping (getf pl :mapping))
                            (mapped-data (make-hash-table)))
-                      (dolist (c '(:x :y))
-                        (let ((selector (ecase c
-                                          (:x (aes-x l-mapping))
-                                          (:y (aes-y l-mapping)))))
-                          (if selector
-                              (let* ((col-name (if (keywordp selector)
-                                                   (string-downcase (string selector))
-                                                   selector))
-                                     (vals (cl-tibble:tbl-col l-data col-name))
-                                     (scale (gethash c scales)))
-                                (setf (gethash c mapped-data)
-                                      (if (eq c :x)
-                                          (scale-map scale vals margin (- width margin))
-                                          (scale-map scale vals (- height margin) margin))))
-                              nil)))
+                      
+                      ;; Resolve all aesthetics
+                      (dolist (c '(:x :y :color :fill :size :alpha :shape :linetype))
+                        (let ((selector (slot-value l-mapping (case c
+                                                                (:x 'x) (:y 'y) (:color 'color) (:fill 'fill)
+                                                                (:size 'size) (:alpha 'alpha) (:shape 'shape) (:linetype 'linetype))))
+                              (constant (getf (layer-params l) c)))
+                          (cond 
+                            ;; 1. Constant override in layer
+                            (constant
+                             (setf (gethash c mapped-data) constant))
+                            ;; 2. Mapping exists
+                            (selector
+                             (let* ((col-name (if (keywordp selector)
+                                                  (string-downcase (string selector))
+                                                  selector))
+                                    (vals (cl-tibble:tbl-col l-data col-name))
+                                    (scale (gethash c scales)))
+                               (setf (gethash c mapped-data)
+                                     (case c
+                                       (:x (scale-map scale vals margin (- width margin)))
+                                       (:y (scale-map scale vals (- height margin) margin))
+                                       (t (scale-map scale vals 0 1))))))
+                            ;; 3. No mapping, no constant
+                            (t nil))))
                       
                       ;; Sort if geom-line
                       (when (typep (layer-geom l) 'geom-line)
@@ -85,9 +116,6 @@
                                          (aref new-y i) (aref y-vals original-idx)))
                           (setf (gethash :x mapped-data) new-x
                                 (gethash :y mapped-data) new-y)))
-
-                      (dolist (c '(:color :fill :size :alpha :width))
-                        (setf (gethash c mapped-data) (getf (layer-params l) c)))
                       
                       (list :layer l :data mapped-data)))))
         

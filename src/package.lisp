@@ -33,6 +33,7 @@
    #:scale_x_discrete
    #:scale_y_discrete
    #:scale_color_discrete
+   #:scale_fill_discrete
    #:scale_color_continuous
 
    ;; Themes & Labels

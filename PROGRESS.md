@@ -134,6 +134,27 @@
 - `src/theme.lisp`
 - `test/theme-tests.lisp`
 
+## Milestone 9: Color & Fill Scales (Discrete) (Completed: 2026-01-14)
+
+### New Features
+- **Discrete Color/Fill Scales**: Added `scale_color_discrete` and `scale_fill_discrete` with a default categorical palette.
+- **Aesthetic Overrides**: Constants passed to `geom_*` functions (e.g., `:color "blue"`) now correctly override aesthetic mappings.
+- **Stat Mapping Persistence**: Stats no longer drop unrelated aesthetic mappings (e.g., `:fill` is preserved when using `stat_count`).
+- **Vectorized Geoms**: `geom-draw` now correctly handles both mapped vectors and constant scalars for color, fill, size, and alpha.
+
+### Verification Results
+- 3 new tests in `test/scale-color-tests.lisp` covering discrete mapping and constant overrides.
+- All existing tests pass.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/scale.lisp`
+- `src/stat.lisp`
+- `src/build.lisp`
+- `src/geom.lisp`
+- `test/scale-color-tests.lisp`
+
 ## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
 
 ### New Features

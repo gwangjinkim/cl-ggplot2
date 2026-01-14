@@ -120,3 +120,47 @@
 
 (defun scale_y_discrete (&rest args)
   (apply #'make-instance 'scale-discrete :channel :y args))
+
+;;; --- Color & Fill Discrete ---
+
+(defparameter *default-categorical-palette*
+  '("#E41A1C" "#377EB8" "#4DAF4A" "#984EA3" "#FF7F00" "#FFFF33" "#A65628" "#F781BF" "#999999"))
+
+(defclass scale-color-discrete (scale-discrete) ())
+(defclass scale-fill-discrete (scale-discrete) ())
+
+(defmethod scale-map ((s scale-color-discrete) values range-min range-max)
+  (declare (ignore range-min range-max))
+  (let* ((domain (scale-domain s))
+         (palette *default-categorical-palette*)
+         (n-palette (length palette)))
+    (cl-vctrs-lite:col-map
+     (lambda (v)
+       (if (cl-vctrs-lite:na-p v)
+           cl-vctrs-lite:*na*
+           (let ((idx (position v domain :test #'equal)))
+             (if idx
+                 (nth (mod idx n-palette) palette)
+                 "#cccccc")))) ; Fallback
+     values)))
+
+(defmethod scale-map ((s scale-fill-discrete) values range-min range-max)
+  (declare (ignore range-min range-max))
+  (let* ((domain (scale-domain s))
+         (palette *default-categorical-palette*)
+         (n-palette (length palette)))
+    (cl-vctrs-lite:col-map
+     (lambda (v)
+       (if (cl-vctrs-lite:na-p v)
+           cl-vctrs-lite:*na*
+           (let ((idx (position v domain :test #'equal)))
+             (if idx
+                 (nth (mod idx n-palette) palette)
+                 "#cccccc")))) ; Fallback
+     values)))
+
+(defun scale_color_discrete (&rest args)
+  (apply #'make-instance 'scale-color-discrete :channel :color args))
+
+(defun scale_fill_discrete (&rest args)
+  (apply #'make-instance 'scale-fill-discrete :channel :fill args))

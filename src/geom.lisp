@@ -9,6 +9,13 @@
 (defgeneric geom-draw (geom layer-data renderer)
   (:documentation "Draw the geom layer using the renderer and mapped data."))
 
+(defun %get-val (mapped-data key index &optional default)
+  (let ((val (gethash key mapped-data)))
+    (if (and (typep val 'sequence) (not (stringp val)))
+        (if (< index (length val))
+            (elt val index)
+            default)
+        (or val default))))
 
 ;;; --- Point ---
 
@@ -22,13 +29,13 @@
 
 (defmethod geom-draw ((g geom-point) layer-data renderer)
   (let ((x-col (gethash :x layer-data))
-        (y-col (gethash :y layer-data))
-        (color (or (gethash :color layer-data) "black"))
-        (size (or (gethash :size layer-data) 2.0))
-        (alpha (or (gethash :alpha layer-data) 1.0)))
+        (y-col (gethash :y layer-data)))
     (loop for i from 0 below (length x-col)
           for x = (aref x-col i)
           for y = (aref y-col i)
+          for color = (%get-val layer-data :color i "black")
+          for size = (%get-val layer-data :size i 2.0)
+          for alpha = (%get-val layer-data :alpha i 1.0)
           unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
           do (r-set-style renderer :fill color :stroke color :opacity alpha)
              (r-circle renderer x y size))))
@@ -47,9 +54,10 @@
 (defmethod geom-draw ((g geom-path) layer-data renderer)
   (let ((x-col (gethash :x layer-data))
         (y-col (gethash :y layer-data))
-        (color (or (gethash :color layer-data) "black"))
-        (size (or (gethash :size layer-data) 1.0))
-        (alpha (or (gethash :alpha layer-data) 1.0)))
+        ;; For path/line, we use the first value for the whole path in v0.1
+        (color (%get-val layer-data :color 0 "black"))
+        (size (%get-val layer-data :size 0 1.0))
+        (alpha (%get-val layer-data :alpha 0 1.0)))
     (r-set-style renderer :stroke color :fill "none" :stroke-width size :opacity alpha)
     (loop for i from 0 below (1- (length x-col))
           for x1 = (aref x-col i)
@@ -74,28 +82,23 @@
   (stat_count))
 
 (defmethod geom-draw ((g geom-bar) layer-data renderer)
-  (let ((x-col (gethash :x layer-data))
-        (y-col (gethash :y layer-data))
-        (fill (or (gethash :fill layer-data) "#3366cc"))
-        (color (or (gethash :color layer-data) "none"))
-        (alpha (or (gethash :alpha layer-data) 1.0))
-        ;; Need width from params or calculated
-        (width (or (gethash :width layer-data) 0.9)))
-    ;; In mapped terms, width of 0.9 means 90% of the gap between categories
-    ;; But here we are already in pixel space. For now, assume a fixed pixel width
-    ;; or calculate it from the scale. 
-    ;; Hack: if x-col has > 1 point, use 80% of gap. Else use 40px.
-    (let* ((px-width (if (> (length x-col) 1)
-                         (* width (abs (- (aref x-col 1) (aref x-col 0))))
-                         40.0))
-           (y-axis-pos (- (r-height renderer) 50)))
-      (loop for i from 0 below (length x-col)
-            for x = (aref x-col i)
-            for y = (aref y-col i)
-            unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
-            do (r-set-style renderer :fill fill :stroke color :opacity alpha)
-               (r-rect renderer (- x (/ px-width 2)) y 
-                       px-width (abs (- y-axis-pos y)))))))
+  (let* ((x-col (gethash :x layer-data))
+         (y-col (gethash :y layer-data))
+         (width (%get-val layer-data :width 0 0.9))
+         (px-width (if (> (length x-col) 1)
+                       (* width (abs (- (aref x-col 1) (aref x-col 0))))
+                       40.0))
+         (y-axis-pos (- (r-height renderer) 50)))
+    (loop for i from 0 below (length x-col)
+          for x = (aref x-col i)
+          for y = (aref y-col i)
+          for fill = (%get-val layer-data :fill i "#3366cc")
+          for color = (%get-val layer-data :color i "none")
+          for alpha = (%get-val layer-data :alpha i 1.0)
+          unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
+          do (r-set-style renderer :fill fill :stroke color :opacity alpha)
+             (r-rect renderer (- x (/ px-width 2)) y 
+                     px-width (abs (- y-axis-pos y))))))
 
 (defclass geom-tile () ())
 
@@ -108,12 +111,12 @@
 (defmethod geom-draw ((g geom-tile) layer-data renderer)
   (let ((x-col (gethash :x layer-data))
         (y-col (gethash :y layer-data))
-        (fill (or (gethash :fill layer-data) "red"))
         (width 20.0)
         (height 20.0))
     (loop for i from 0 below (length x-col)
           for x = (aref x-col i)
           for y = (aref y-col i)
+          for fill = (%get-val layer-data :fill i "red")
           do (r-set-style renderer :fill fill :stroke "none")
              (r-rect renderer (- x (/ width 2)) (- y (/ height 2)) width height))))
 

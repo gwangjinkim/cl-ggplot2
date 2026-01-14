@@ -476,32 +476,46 @@ Implement:
 
 Stop after M8 unless asked.
 
-### M9 — Faceting: facet_wrap
+### M9 — Color & Fill Scales (Discrete)
+Implement:
+- Default color palette (e.g., Viridis or ColorBrewer approximation).
+- `scale_color_discrete` and `scale_fill_discrete`.
+- Mapping data to colors during the build step.
+
+### M10 — Additional Geoms (geom_histogram & geom_boxplot)
+Implement:
+- `stat_bin` (already partially there, now as full histogram).
+- `geom_histogram` constructor.
+- `stat_boxplot` (median, quantiles).
+- `geom_boxplot` drawing logic.
+
+### M11 — Renderer & Styling Polish
+Implement:
+- Linetype support (dashed, dotted).
+- Basic legend drawing (color/fill).
+- Global font setting via theme.
+
+### M12 — Faceting: facet_wrap
 Implement:
 - basic `facet_wrap` layout
 - split data by categorical variable(s)
 - repeat geoms across panels
 
-### M10 — Position Adjustments
+### M13 — Position Adjustments
 Implement:
 - `position_dodge` (bar side-by-side)
 - `position_fill` (percentage stacks)
 - update `geom_bar` to support them
 
-### M11 — Coordinate Systems (basics)
+### M14 — Coordinate Systems (basics)
 Implement:
 - `coord_flip` (swap x and y)
 - `coord_fixed` (fixed aspect ratio)
 
-### M12 — Advanced Stats
+### M15 — Advanced Stats & Aesthetics
 Implement:
 - `stat_smooth` (LM/linear regression)
-- `stat_summary` (mean/median points)
-
-### M13 — Additional Aesthetics
-Implement:
 - `scale_size`, `scale_shape`, `scale_alpha`
-- mapping data to these channels in `aes`
 
 ### M14 — Legends & Color Palettes
 Implement:

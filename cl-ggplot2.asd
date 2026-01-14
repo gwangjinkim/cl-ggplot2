@@ -37,6 +37,7 @@
                  (:file "geom-line-tests")
                  (:file "scale-discrete-tests")
                  (:file "geom-bar-tests")
-                 (:file "theme-tests"))))
+                 (:file "theme-tests")
+                 (:file "scale-color-tests"))))
   :perform (asdf:test-op (op c)
                          (uiop:symbol-call :fiveam :run! :cl-ggplot2)))
