@@ -68,7 +68,7 @@
                       (p-y (+ margin (* p-row panel-height)))
                       (p-tibble (getf split-data p-val))
                       (p-layers nil))
-                 
+                 (declare (ignore p-x p-y))
                  (dolist (l layers)
                    (let* ((l-data (or (layer-data l) p-tibble))
                           (l-mapping (or (layer-mapping l) (plot-mapping plot)))
@@ -81,32 +81,66 @@
                          (loop for (aes-key col-name) on changed-aes by #'cddr
                                do (setf (slot-value final-mapping (%aes-slot-name aes-key)) col-name))
                          
-                         ;; Global Training
-                         (dolist (channel '(:x :y :color :fill :size :alpha :shape :linetype :xmin :xmax :ymin :ymax :middle :lower :upper))
-                           (let* ((cs-key (case channel
-                                            ((:xmin :xmax) :x)
-                                            ((:ymin :ymax :middle :lower :upper) :y)
-                                            (t channel)))
-                                  (col-selector (slot-value final-mapping (%aes-slot-name channel)))
-                                  (constant-override (getf (layer-params l) channel)))
-                             (when (and col-selector (not constant-override))
-                               (let* ((col-name (if (keywordp col-selector) (string-downcase (string col-selector)) col-selector))
-                                      (values (cl-tibble:tbl-col transformed-data col-name)))
-                                 (unless (gethash cs-key scales)
-                                   (setf (gethash cs-key scales)
-                                         (case cs-key
-                                           (:color (make-instance 'scale-color-discrete :channel :color))
-                                           (:fill (make-instance 'scale-fill-discrete :channel :fill))
-                                           (t (make-instance 'scale-continuous :channel cs-key)))))
-                                 (when (member cs-key '(:x :y))
-                                   (when (and (not (typep (gethash cs-key scales) 'scale-discrete))
-                                              (loop for i from 0 below (min 10 (length values))
-                                                    for v = (aref values i)
-                                                    thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
-                                     (setf (gethash cs-key scales) (make-instance 'scale-discrete :channel cs-key))))
-                                 (scale-train (gethash cs-key scales) values)))))
-                         
-                         (push (list :layer l :data transformed-data :mapping final-mapping) p-layers)))))
+                         ;; 2b. Position Adjustment
+                         (let* ((pos-attr (layer-position l))
+                                (pos (cond ((eq pos-attr :identity) (position_identity))
+                                           ((eq pos-attr :stack) (position_stack))
+                                           ((eq pos-attr :dodge) (position_dodge))
+                                           ((eq pos-attr :fill) (position_fill))
+                                           ((typep pos-attr 'position-adj) pos-attr)
+                                           (t (position_identity))))
+                                (pos-data (make-hash-table)))
+                           ;; Normalize for position logic
+                           (dolist (c '(:x :y :group :color :fill :xmin :xmax :ymin :ymax))
+                             (let* ((selector (slot-value final-mapping (%aes-slot-name c)))
+                                    (constant (getf (layer-params l) c)))
+                               (if constant
+                                   (setf (gethash c pos-data) constant)
+                                   (when selector
+                                     (let ((col-name (if (keywordp selector) (string-downcase (string selector)) selector)))
+                                       (setf (gethash c pos-data) (cl-tibble:tbl-col transformed-data col-name)))))))
+                           
+                           (position-adjust pos pos-data (layer-params l))
+
+                           ;; Global Training
+                           (dolist (channel '(:x :y :color :fill :size :alpha :shape :linetype :xmin :xmax :ymin :ymax :middle :lower :upper))
+                             (let* ((cs-key (case channel
+                                              ((:xmin :xmax) :x)
+                                              ((:ymin :ymax :middle :lower :upper) :y)
+                                              (t channel)))
+                                    (col-selector (slot-value final-mapping (%aes-slot-name channel)))
+                                    (constant-override (getf (layer-params l) channel))
+                                    (pos-val (gethash channel pos-data)))
+                               (let ((values (cond
+                                               ;; Training: prefer pos-val for coordinates
+                                               ;; If we have xmin/xmax, don't train on :x.
+                                               ((and (member channel '(:x :y))
+                                                     (or (gethash :xmin pos-data) (gethash :ymin pos-data)))
+                                                nil)
+                                               ((and (member channel '(:x :y :xmin :xmax :ymin :ymax)) pos-val)
+                                                (if (or (not (typep pos-val 'sequence)) (stringp pos-val))
+                                                    (vector pos-val)
+                                                    pos-val))
+                                               ((and col-selector (not constant-override))
+                                                (let ((col-name (if (keywordp col-selector) (string-downcase (string col-selector)) col-selector)))
+                                                  (cl-tibble:tbl-col transformed-data col-name)))
+                                               (t nil))))
+                                 (when (and values (> (length values) 0))
+                                   (unless (gethash cs-key scales)
+                                     (setf (gethash cs-key scales)
+                                           (case cs-key
+                                             (:color (make-instance 'scale-color-discrete :channel :color))
+                                             (:fill (make-instance 'scale-fill-discrete :channel :fill))
+                                             (t (make-instance 'scale-continuous :channel cs-key)))))
+                                   (when (member cs-key '(:x :y))
+                                     (when (and (not (typep (gethash cs-key scales) 'scale-discrete))
+                                                (loop for i from 0 below (min 10 (length values))
+                                                      for v = (aref values i)
+                                                      thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
+                                       (setf (gethash cs-key scales) (make-instance 'scale-discrete :channel cs-key))))
+                                   (scale-train (gethash cs-key scales) values)))))
+                           
+                           (push (list :layer l :data transformed-data :pos-data pos-data :mapping final-mapping) p-layers))))))
                  (push (list :value p-val :x p-x :y p-y :width panel-width :height panel-height :layers (nreverse p-layers)) panels)))
 
       ;; 3. Final Mapping per Panel
@@ -122,12 +156,26 @@
                                    collect
                                    (let* ((l (getf pl :layer))
                                           (l-data (getf pl :data))
+                                          (l-pos-data (getf pl :pos-data))
                                           (l-mapping (getf pl :mapping))
                                           (mapped-data (make-hash-table)))
                                      (dolist (c '(:x :y :color :fill :size :alpha :shape :linetype :xmin :xmax :ymin :ymax :middle :lower :upper))
                                        (let ((selector (slot-value l-mapping (%aes-slot-name c)))
-                                             (constant (getf (layer-params l) c)))
+                                             (constant (getf (layer-params l) c))
+                                             (pos-val (gethash c l-pos-data)))
                                          (cond 
+                                           ((and (member c '(:x :y :xmin :xmax :ymin :ymax)) pos-val)
+                                            (let* ((scale (gethash (case c ((:xmin :xmax) :x)
+                                                                           ((:ymin :ymax :middle :lower :upper) :y)
+                                                                           (t c)) scales))
+                                                   (vals (if (or (not (typep pos-val 'sequence)) (stringp pos-val))
+                                                             (vector pos-val)
+                                                             pos-val)))
+                                              (setf (gethash c mapped-data)
+                                                    (case c
+                                                      ((:x :xmin :xmax) (scale-map scale vals p-x (+ p-x p-w)))
+                                                      ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (+ p-y p-h) p-y))
+                                                      (t (scale-map scale vals 0 1))))))
                                            (constant (setf (gethash c mapped-data) constant))
                                            (selector
                                             (let* ((col-name (if (keywordp selector) (string-downcase (string selector)) selector))
@@ -172,7 +220,7 @@
         (p-val (getf p-info :value))
         (x-scale (gethash :x built-scales))
         (y-scale (gethash :y built-scales)))
-    
+    (declare (ignore plot))
     ;; Panel background
     (r-set-style renderer :fill (theme-panel-fill theme) :stroke (theme-panel-stroke theme) :stroke-width 1)
     (r-rect renderer p-x p-y p-w p-h)

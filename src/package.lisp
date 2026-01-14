@@ -38,6 +38,12 @@
    #:scale_fill_discrete
    #:scale_color_continuous
 
+   ;; Positions
+   #:position_identity
+   #:position_stack
+   #:position_dodge
+   #:position_fill
+
    ;; Themes & Labels
    #:theme_minimal
    #:theme_ggplot2_approx

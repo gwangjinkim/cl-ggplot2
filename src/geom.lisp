@@ -100,6 +100,10 @@
 (defmethod geom-draw ((g geom-bar) layer-data renderer)
   (let* ((x-col (gethash :x layer-data))
          (y-col (gethash :y layer-data))
+         (xmin-col (gethash :xmin layer-data))
+         (xmax-col (gethash :xmax layer-data))
+         (ymin-col (gethash :ymin layer-data))
+         (ymax-col (gethash :ymax layer-data))
          (width (%get-val layer-data :width 0 0.9))
          (px-width (if (> (length x-col) 1)
                        (* width (abs (- (aref x-col 1) (aref x-col 0))))
@@ -108,13 +112,21 @@
     (loop for i from 0 below (length x-col)
           for x = (aref x-col i)
           for y = (aref y-col i)
+          for xmin = (when xmin-col (aref xmin-col i))
+          for xmax = (when xmax-col (aref xmax-col i))
+          for ymin = (when ymin-col (aref ymin-col i))
+          for ymax = (when ymax-col (aref ymax-col i))
           for fill = (%get-val layer-data :fill i "#3366cc")
           for color = (%get-val layer-data :color i "none")
           for alpha = (%get-val layer-data :alpha i 1.0)
           unless (or (cl-vctrs-lite:na-p x) (cl-vctrs-lite:na-p y))
           do (r-set-style renderer :fill fill :stroke color :opacity alpha)
-             (r-rect renderer (- x (/ px-width 2)) y 
-                     px-width (abs (- y-axis-pos y))))))
+             (let ((final-x1 (if xmin xmin (- x (/ px-width 2))))
+                   (final-x2 (if xmax xmax (+ x (/ px-width 2))))
+                   (final-y1 (if ymax ymax y))
+                   (final-y2 (if ymin ymin y-axis-pos)))
+               (r-rect renderer final-x1 final-y1 
+                       (- final-x2 final-x1) (abs (- final-y2 final-y1)))))))
 
 (defclass geom-tile () ())
 
@@ -211,36 +223,42 @@
                    :data data
                    :params p)))
 
-(defun geom_bar (&rest params &key mapping data &allow-other-keys)
+(defun geom_bar (&rest params &key mapping data (position :stack) &allow-other-keys)
   (let ((p (copy-list params)))
     (remf p :mapping)
     (remf p :data)
+    (remf p :position)
     (make-instance 'layer
                    :geom (make-instance 'geom-bar)
                    :stat (stat_count)
+                   :position position
                    :mapping mapping
                    :data data
                    :params p)))
 
-(defun geom_histogram (&rest params &key mapping data &allow-other-keys)
+(defun geom_histogram (&rest params &key mapping data (position :stack) &allow-other-keys)
   (let ((p (copy-list params)))
     (remf p :mapping)
     (remf p :data)
+    (remf p :position)
     (make-instance 'layer
                    :geom (make-instance 'geom-bar)
                    :stat (stat_bin)
+                   :position position
                    :mapping mapping
                    :data data
                    :params p)))
 
-(defun geom_col (&rest params &key mapping data &allow-other-keys)
+(defun geom_col (&rest params &key mapping data (position :stack) &allow-other-keys)
   "Alias for geom_bar with stat_identity."
   (let ((p (copy-list params)))
     (remf p :mapping)
     (remf p :data)
+    (remf p :position)
     (make-instance 'layer
                    :geom (make-instance 'geom-bar)
                    :stat (stat_identity)
+                   :position position
                    :mapping mapping
                    :data data
                    :params p)))
