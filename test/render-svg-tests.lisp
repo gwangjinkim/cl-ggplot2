@@ -1,7 +1,6 @@
 (in-package #:cl-ggplot2/test)
 
-(def-suite :cl-ggplot2/render :in :cl-ggplot2)
-(in-suite :cl-ggplot2/render)
+(in-suite :cl-ggplot2)
 
 (test test-svg-renderer-primitives
   (let ((r (make-instance 'cl-ggplot2::svg-renderer)))

@@ -17,7 +17,7 @@
 (defgeneric r-line (renderer x1 y1 x2 y2)
   (:documentation "Draw a line."))
 
-(defgeneric r-circle (renderer cx cy r)
+(defgeneric r-circle (renderer cx cy radius)
   (:documentation "Draw a circle."))
 
 (defgeneric r-text (renderer x y text &key anchor angle font-size font-family)
@@ -82,9 +82,9 @@
           (fmt-float x1) (fmt-float y1) (fmt-float x2) (fmt-float y2)
           (%svg-style-to-attrs (r-style r))))
 
-(defmethod r-circle ((r svg-renderer) cx cy r)
+(defmethod r-circle ((r svg-renderer) cx cy radius)
   (format (r-stream r) "<circle cx=\"~a\" cy=\"~a\" r=\"~a\"~a />~%"
-          (fmt-float cx) (fmt-float cy) (fmt-float r)
+          (fmt-float cx) (fmt-float cy) (fmt-float radius)
           (%svg-style-to-attrs (r-style r))))
 
 (defmethod r-text ((r svg-renderer) x y text &key anchor angle font-size font-family)
