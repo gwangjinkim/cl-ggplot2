@@ -24,7 +24,7 @@
               (coord_fixed :ratio 1)))
          ;; Use a non-square output to force adjustment
          (output (render p :device :svg :width 600 :height 400)))
-    ;; Point (0,0) -> X=150, Y=350.
-    ;; Point (10,10) -> X=450, Y=50.
-    (is (cl-ppcre:scan "cx=\"150.0\" cy=\"350.0\"" output))
-    (is (cl-ppcre:scan "cx=\"450.0\" cy=\"50.0\"" output))))
+    ;; Point (0,0) -> X=90.0, Y=350.0.
+    ;; Point (10,10) -> X=390.0, Y=50.0.
+    (is (cl-ppcre:scan "cx=\"90.0\" cy=\"350.0\"" output))
+    (is (cl-ppcre:scan "cx=\"390.0\" cy=\"50.0\"" output))))

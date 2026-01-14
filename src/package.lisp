@@ -42,6 +42,10 @@
    #:scale_size_continuous
    #:scale_alpha_continuous
    #:scale_shape_discrete
+   #:scale_color_brewer
+   #:scale_fill_brewer
+   #:scale_color_manual
+   #:scale_fill_manual
 
    ;; Positions
    #:position_identity

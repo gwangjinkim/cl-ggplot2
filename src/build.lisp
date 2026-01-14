@@ -35,6 +35,22 @@
             (setf result (append result (list uv (cl-tibble:slice data :rows indices))))))
         result)))
 
+(defun %get-legend-data (scales)
+  "Extracts legend info from non-XY scales."
+  (let ((legends nil))
+    (dolist (c '(:color :fill :size :shape :alpha))
+      (let ((s (gethash c scales)))
+        (when (and s (scale-guide s))
+          (let ((breaks (scale-breaks s)))
+            (when (and breaks (> (length breaks) 0))
+              (let ((items nil))
+                (dolist (b breaks)
+                  ;; To get the visual representation, we map the break value
+                  (let ((val (scale-map s (vector b) 0 1)))
+                    (push (list :label (format nil "~a" b) :value (aref val 0)) items)))
+                (push (list :channel c :title (or (scale-name s) (string-capitalize (string c))) :items (nreverse items)) legends)))))))
+    (nreverse legends)))
+
 (defun build-plot (plot width height)
   "Bridges the gap between plot specification and rendering instructions."
   (let* ((data (plot-data plot))
@@ -42,7 +58,6 @@
          (facet (plot-facet plot))
          (coord (or (plot-coord plot) (coord_cartesian)))
          (margin 50)
-         ;; Initialize scales from plot
          (scales (plot-scales plot)))
     
     ;; 1. Facet Resolution
@@ -52,8 +67,10 @@
            (n-panels (length panel-values))
            (ncol (or (when facet (facet-ncol facet)) (ceiling (sqrt n-panels)) 1))
            (nrow (ceiling n-panels ncol))
-           ;; Panel dimensions
-           (panel-width (/ (- width (* 2 margin)) ncol))
+           ;; Reserve space for legend on the right (approx 120px)
+           (legend-width 120)
+           (plotting-width (- width margin margin legend-width))
+           (panel-width (/ plotting-width ncol))
            (panel-height (/ (- height (* 2 margin)) nrow))
            (panels nil))
 
@@ -154,7 +171,6 @@
                            (p-y (getf p :y))
                            (p-w (getf p :width))
                            (p-h (getf p :height))
-                           ;; Coordinate-dependent ranges
                            (coord-map (coord-map-scales coord scales p-x p-y p-w p-h))
                            (x-range (getf coord-map :x-range))
                            (y-range (getf coord-map :y-range))
@@ -196,11 +212,11 @@
                                                       ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (first y-range) (second y-range)))
                                                       (t (scale-map scale vals 0 1))))))
                                            (t nil))))
-                                     ;; Final coordinate transform (e.g. flip)
                                      (list :layer l :data (coord-transform-mapped coord mapped-data))))))
                       (list :value (getf p :value) :x p-x :y p-y :width p-w :height p-h :layers p-layers)))))
         
-        (list :panels built-panels :scales scales :ncol ncol :nrow nrow :panel-width panel-width :panel-height panel-height)))))
+        (list :panels built-panels :scales scales :ncol ncol :nrow nrow :panel-width panel-width :panel-height panel-height
+              :legends (%get-legend-data scales))))))
 
 (defun %draw-labels (plot renderer width height margin)
   (declare (ignore margin))
@@ -230,33 +246,27 @@
          (coord (or (plot-coord plot) (coord_cartesian)))
          (x-scale (gethash :x built-scales))
          (y-scale (gethash :y built-scales))
-         ;; Resolve ranges for labels/grids
          (coord-map (coord-map-scales coord built-scales p-x p-y p-w p-h))
          (x-range (getf coord-map :x-range))
          (y-range (getf coord-map :y-range)))
-    ;; Panel background
     (r-set-style renderer :fill (theme-panel-fill theme) :stroke (theme-panel-stroke theme) :stroke-width 1)
     (r-rect renderer p-x p-y p-w p-h)
     
-    ;; Strip (Facet Label)
     (when (not (eq p-val :default))
       (r-set-style renderer :fill "#eeeeee" :stroke (theme-panel-stroke theme) :stroke-width 1)
       (r-rect renderer p-x p-y p-w 20)
       (r-set-style renderer :fill (theme-axis-text-color theme))
       (r-text renderer (+ p-x (/ p-w 2)) (+ p-y 15) (format nil "~a" p-val) :anchor "middle" :font-size 10))
 
-    ;; Y-axis breaks & grid
     (when y-scale
       (let ((breaks (scale-breaks y-scale)))
         (dolist (b breaks)
           (let ((y (scale-map y-scale (vector b) (first y-range) (second y-range))))
             (setf y (aref y 0))
             (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
-            ;; If flipped, y-scale values are mapped to horizontal pixels.
             (if (typep coord 'coord-flip)
                 (r-line renderer y p-y y (+ p-y p-h))
                 (r-line renderer p-x y (+ p-x p-w) y))
-            ;; Ticks/Labels
             (unless (typep coord 'coord-flip)
               (when (<= (abs (- p-x 50)) 2)
                 (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
@@ -264,28 +274,55 @@
                 (r-set-style renderer :fill (theme-axis-text-color theme))
                 (r-text renderer (- p-x 10) y (format nil "~a" b) :anchor "end" :font-size (theme-axis-text-size theme))))))))
 
-    ;; X-axis breaks & grid
     (when x-scale
       (let ((breaks (scale-breaks x-scale)))
         (dolist (b breaks)
           (let ((x (scale-map x-scale (vector b) (first x-range) (second x-range))))
             (setf x (aref x 0))
             (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
-            ;; If flipped, x-scale values are mapped to vertical pixels.
             (if (typep coord 'coord-flip)
                 (r-line renderer p-x x (+ p-x p-w) x)
                 (r-line renderer x p-y x (+ p-y p-h)))
-            ;; Ticks/Labels
             (unless (typep coord 'coord-flip)
               (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
               (r-line renderer x (+ p-y p-h) x (+ p-y p-h 5))
               (r-set-style renderer :fill (theme-axis-text-color theme))
               (r-text renderer x (+ p-y p-h 15) (format nil "~a" b) :anchor "middle" :font-size (theme-axis-text-size theme)))))))
 
-    ;; Axes lines
     (r-set-style renderer :stroke (theme-axis-line-color theme) :stroke-width 1)
-    (r-line renderer p-x (+ p-y p-h) (+ p-x p-w) (+ p-y p-h)) ; bottom
+    (r-line renderer p-x (+ p-y p-h) (+ p-x p-w) (+ p-y p-h))
     (r-line renderer p-x p-y p-x (+ p-y p-h))))
+
+(defun %draw-legends (legends renderer width height theme)
+  "Draws legends on the right."
+  (declare (ignore height))
+  (let ((x (- width 100))
+        (y 80)
+        (item-height 20))
+    (dolist (leg legends)
+      (r-set-style renderer :fill (theme-axis-text-color theme))
+      (r-text renderer x y (getf leg :title) :font-size 12 :font-weight "bold")
+      (incf y 15)
+      (dolist (item (getf leg :items))
+        (let ((chan (getf leg :channel))
+              (val (getf item :value)))
+          (case chan
+            ((:color :fill)
+             (r-set-style renderer :fill val :stroke "none")
+             (r-rect renderer x y 12 12))
+            (:size
+             (r-set-style renderer :fill "#333" :stroke "none")
+             (r-circle renderer (+ x 6) (+ y 6) val))
+            (:alpha
+             (r-set-style renderer :fill "#333" :stroke "none" :opacity val)
+             (r-rect renderer x y 12 12))
+            (:shape
+             (r-set-style renderer :fill "#333" :stroke "none")
+             (r-circle renderer (+ x 6) (+ y 6) 3))) ; Dummy shape for now
+          (r-set-style renderer :fill (theme-axis-text-color theme))
+          (r-text renderer (+ x 20) (+ y 10) (getf item :label) :font-size 10)
+          (incf y item-height)))
+      (incf y 20))))
 
 (defun render (plot &key (device :svg) (width 600) (height 400) (dpi 96))
   (declare (ignore dpi))
@@ -294,26 +331,24 @@
          (built (build-plot plot width height))
          (panels (getf built :panels))
          (scales (getf built :scales))
+         (legends (getf built :legends))
          (theme (or (plot-theme plot) (make-instance 'theme)))
          (margin 50))
     
     (r-begin renderer width height)
-    
-    ;; Global background
     (r-set-style renderer :fill "white" :stroke "none")
     (r-rect renderer 0 0 width height)
     
-    ;; Labels
     (%draw-labels plot renderer width height margin)
     
-    ;; Panels
     (dolist (p-info panels)
       (draw-panel-skeleton plot renderer p-info theme scales)
-      ;; Render layers for this panel
       (dolist (l-info (getf p-info :layers))
         (let ((geom (layer-geom (getf l-info :layer)))
               (data (getf l-info :data)))
           (geom-draw geom data renderer))))
+    
+    (%draw-legends legends renderer width height theme)
     
     (r-end renderer)))
 

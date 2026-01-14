@@ -20,7 +20,7 @@
 (defgeneric r-circle (renderer cx cy radius)
   (:documentation "Draw a circle."))
 
-(defgeneric r-text (renderer x y text &key anchor angle font-size font-family)
+(defgeneric r-text (renderer x y text &key anchor angle font-size font-family font-weight)
   (:documentation "Draw text."))
 
 (defgeneric r-group-begin (renderer &key id class)
@@ -88,13 +88,14 @@
           (fmt-float cx) (fmt-float cy) (fmt-float radius)
           (%svg-style-to-attrs (r-style r))))
 
-(defmethod r-text ((r svg-renderer) x y text &key anchor angle font-size font-family)
-  (format (r-stream r) "<text x=\"~a\" y=\"~a\"~a~a~a~a>~a</text>~%"
+(defmethod r-text ((r svg-renderer) x y text &key anchor angle font-size font-family font-weight)
+  (format (r-stream r) "<text x=\"~a\" y=\"~a\"~a~a~a~a~a>~a</text>~%"
           (fmt-float x) (fmt-float y)
           (if anchor (format nil " text-anchor=\"~a\"" anchor) "")
           (if angle (format nil " transform=\"rotate(~a ~a ~a)\"" (fmt-float angle) (fmt-float x) (fmt-float y)) "")
           (if font-size (format nil " font-size=\"~a\"" (fmt-float font-size)) "")
           (if font-family (format nil " font-family=\"~a\"" font-family) "")
+          (if font-weight (format nil " font-weight=\"~a\"" font-weight) "")
           text))
 
 (defmethod r-group-begin ((r svg-renderer) &key id class)

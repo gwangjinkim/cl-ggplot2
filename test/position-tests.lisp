@@ -9,8 +9,8 @@
          (p (gg (data (aes :x :x :y :y :fill :g))
               (geom_col :position :dodge)))
          (output (render p :device :svg)))
-    ;; Should have 4 bars + 1 global bg + 1 panel bg = 6 rects
-    (is (= 6 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
+    ;; 4 bars + 1 global bg + 1 panel bg + 2 legend keys = 8 rects
+    (is (= 8 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
     ;; Verify that we have two different X positions for each nominal X
     (let ((x-coords (mapcar (lambda (s) (cl-ppcre:register-groups-bind (x) ("x=\"([^\"]+)\"" s) x))
                             (cl-ppcre:all-matches-as-strings "<rect [^>]*x=\"[^\"]+\"[^>]*width=\"[^\"]+\"" output))))
@@ -33,7 +33,7 @@
          (p (gg (data (aes :x :x))
               (geom_bar)))
          (output (render p :device :svg)))
-    ;; Verify we have 3 bars.
+    ;; Verify we have 3 bars. 3 bars + 1 panel + 1 global = 5 rects (no legend).
     (is (= 5 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
     ;; A has count 3, B/C have count 1.
     ;; They should have different heights.

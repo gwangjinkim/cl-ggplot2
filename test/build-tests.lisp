@@ -11,10 +11,8 @@
     (is (cl-ppcre:scan "<svg" output))
     ;; There should be 3 circles for the 3 points
     (is (= 3 (length (cl-ppcre:all-matches-as-strings "<circle" output))))
-    ;; Check that points are within the panel (margin 50 to width-50)
-    ;; 1.0 is min-x, 3.0 is max-x. mapping 1.0 -> 50, 3.0 -> 550.
-    ;; x=2.0 -> 300.0
-    (is (cl-ppcre:scan "cx=\"300.0\"" output))))
+    ;; Center of 380 is 190. 50 + 190 = 240.
+    (is (cl-ppcre:scan "cx=\"240.0\"" output))))
 
 (test test-scatter-plot-with-params
   (let* ((data (cl-tibble:tibble :x #(1.0) :y #(10.0)))
