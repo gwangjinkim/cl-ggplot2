@@ -36,9 +36,9 @@
                        (values (cl-tibble:tbl-col l-data col-name)))
                   ;; Upgrade scale to discrete if data is non-numeric
                   (when (and (not (typep (gethash channel scales) 'scale-discrete))
-                             (loop for i from 0 below (min 10 (length values))
-                                   for v = (aref values i)
-                                   thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
+                         (loop for i from 0 below (min 10 (length values))
+                               for v = (aref values i)
+                               thereis (not (or (cl-vctrs-lite:na-p v) (numberp v)))))
                     (setf (gethash channel scales) (make-instance 'scale-discrete :channel channel)))
                   
                   (scale-train (gethash channel scales) values)))))))
@@ -65,8 +65,6 @@
                                       (if (eq c :x)
                                           (scale-map scale vals margin (- width margin))
                                           (scale-map scale vals (- height margin) margin))))
-                              ;; Default mapping if not provided (e.g. y for some geoms)
-                              ;; But for now just skip if no selector
                               nil)))
                       
                       ;; Sort if geom-line
@@ -94,6 +92,58 @@
                       (list :layer l :data mapped-data)))))
         
         (list :layers built-layers :scales scales)))))
+
+(defun %draw-labels (plot renderer width height margin)
+  (let ((title (plot-title plot))
+        (subtitle (plot-subtitle plot))
+        (x-lab (or (plot-x-label plot) 
+                   (let ((m (plot-mapping plot)))
+                     (when m
+                       (let ((sel (aes-x m)))
+                         (if (keywordp sel) (string-capitalize (string-downcase (string sel))) sel))))))
+        (y-lab (or (plot-y-label plot)
+                   (let ((m (plot-mapping plot)))
+                     (when m
+                       (let ((sel (aes-y m)))
+                         (if (keywordp sel) (string-capitalize (string-downcase (string sel))) sel)))))))
+    
+    (r-set-style renderer :fill "black")
+    ;; Title
+    (when title
+      (r-text renderer (/ width 2) (/ margin 2) title :anchor "middle" :font-size 18))
+    ;; Subtitle
+    (when subtitle
+      (r-text renderer (/ width 2) (+ (/ margin 2) 20) subtitle :anchor "middle" :font-size 14))
+    ;; X-axis Label
+    (when x-lab
+      (r-text renderer (/ width 2) (- height (/ margin 4)) (format nil "~a" x-lab) :anchor "middle" :font-size 12))
+    ;; Y-axis Label
+    (when y-lab
+      (r-text renderer (/ margin 4) (/ height 2) (format nil "~a" y-lab) :anchor "middle" :angle -90 :font-size 12))))
+
+(defun draw-plot-skeleton (plot renderer width height)
+  "Internal function to draw axes and panel area."
+  (let* ((margin 50)
+         (theme (or (plot-theme plot) (make-instance 'theme))))
+    ;; Background panel
+    (r-set-style renderer :fill (theme-panel-fill theme) :stroke (theme-panel-stroke theme) :stroke-width 1)
+    (r-rect renderer margin margin (- width (* 2 margin)) (- height (* 2 margin)))
+    
+    ;; Gridlines (horizontal)
+    (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
+    (loop for i from 1 to 3
+          for y = (+ margin (* i (/ (- height (* 2 margin)) 4)))
+          do (r-line renderer margin y (- width margin) y))
+
+    ;; Axes placeholders
+    (r-set-style renderer :stroke (theme-axis-line-color theme) :stroke-width 1)
+    ;; X axis
+    (r-line renderer margin (- height margin) (- width margin) (- height margin))
+    ;; Y axis
+    (r-line renderer margin margin margin (- height margin))
+    
+    ;; Labels
+    (%draw-labels plot renderer width height margin)))
 
 ;; Redefine render
 (defun render (plot &key (device :svg) (width 600) (height 400) (dpi 96))

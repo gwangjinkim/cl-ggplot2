@@ -23,9 +23,12 @@
   ((data :initarg :data :accessor plot-data)
    (mapping :initarg :mapping :initform nil :accessor plot-mapping)
    (layers :initarg :layers :initform (list) :accessor plot-layers)
-   (scales :initarg :scales :initform (list) :accessor plot-scales)
    (theme :initarg :theme :initform nil :accessor plot-theme)
    (coord :initarg :coord :initform nil :accessor plot-coord)
+   (title :initarg :title :initform nil :accessor plot-title)
+   (subtitle :initarg :subtitle :initform nil :accessor plot-subtitle)
+   (x-label :initarg :x-label :initform nil :accessor plot-x-label)
+   (y-label :initarg :y-label :initform nil :accessor plot-y-label)
    (labels :initarg :labels :initform (list) :accessor plot-labels)))
 
 (defun ggplot (data &optional mapping)

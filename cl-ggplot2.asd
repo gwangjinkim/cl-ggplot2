@@ -17,7 +17,8 @@
                  (:file "scale")
                  (:file "stat")
                  (:file "geom")
-                 (:file "build"))))
+                 (:file "build")
+                 (:file "theme"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-ggplot2/test))))
 
 (asdf:defsystem #:cl-ggplot2/test
@@ -35,6 +36,7 @@
                  (:file "build-tests")
                  (:file "geom-line-tests")
                  (:file "scale-discrete-tests")
-                 (:file "geom-bar-tests"))))
+                 (:file "geom-bar-tests")
+                 (:file "theme-tests"))))
   :perform (asdf:test-op (op c)
                          (uiop:symbol-call :fiveam :run! :cl-ggplot2)))

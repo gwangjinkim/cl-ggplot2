@@ -114,6 +114,26 @@
 - `src/build.lisp`
 - `test/geom-bar-tests.lisp`
 
+## Milestone 8: Labels & Themes (Minimal) (Completed: 2026-01-14)
+
+### New Features
+- **Labs**: Added `labs` function for setting title, subtitle, and axis labels.
+- **Themes**: Added `theme_minimal` for a cleaner plot aesthetic.
+- **Gridlines**: Added basic gridline rendering in the plot skeleton.
+- **Text Rendering**: SVG renderer now supports text anchors, angles, and alignment.
+
+### Verification Results
+- 4 new tests in `test/theme-tests.lisp` covering label updates and SVG content scanning.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/core.lisp`
+- `src/build.lisp`
+- `src/theme.lisp`
+- `test/theme-tests.lisp`
+
 ## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
 
 ### New Features
