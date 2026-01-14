@@ -57,3 +57,23 @@
 - `src/package.lisp`
 - `src/scale.lisp`
 - `test/scale-tests.lisp`
+
+## Milestone 4: Geom Point & Stat Identity (Completed: 2026-01-14)
+
+### New Features
+- **Geom Point**: Added `geom_point` for scatter plots.
+- **Stat Identity**: Added `stat_identity` for direct data mapping.
+- **Build Pipeline**: Implemented the core orchestration logic that connects data, scales, and geoms.
+- **Coordinate Inversion**: The build pipeline now correctly inverts Y-coordinates for SVG's top-down system.
+
+### Verification Results
+- 2 new tests in `test/build-tests.lisp` verifying scatter plot rendering with various parameters.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/stat.lisp`
+- `src/geom.lisp`
+- `src/build.lisp`
+- `test/build-tests.lisp`

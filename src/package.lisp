@@ -39,4 +39,5 @@
 
    ;; Output
    #:render
-   #:save))
+   #:save
+   #:build-plot))

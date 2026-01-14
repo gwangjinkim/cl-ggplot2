@@ -30,6 +30,35 @@
           do (r-set-style renderer :fill color :stroke color :opacity alpha)
              (r-circle renderer x y size))))
 
+(defclass geom-path () ())
+
+(defmethod geom-required-aes ((g geom-path))
+  '(:x :y))
+
+(defmethod geom-default-stat ((g geom-path))
+  (stat_identity))
+
+(defmethod geom-draw ((g geom-path) layer-data renderer)
+  (let ((x-col (gethash :x layer-data))
+        (y-col (gethash :y layer-data))
+        (color (or (gethash :color layer-data) "black"))
+        (size (or (gethash :size layer-data) 1.0))
+        (alpha (or (gethash :alpha layer-data) 1.0)))
+    (r-set-style renderer :stroke color :fill "none" :stroke-width size :opacity alpha)
+    (loop for i from 0 below (1- (length x-col))
+          for x1 = (aref x-col i)
+          for y1 = (aref y-col i)
+          for x2 = (aref x-col (1+ i))
+          for y2 = (aref y-col (1+ i))
+          unless (or (cl-vctrs-lite:na-p x1) (cl-vctrs-lite:na-p y1)
+                     (cl-vctrs-lite:na-p x2) (cl-vctrs-lite:na-p y2))
+          do (r-line renderer x1 y1 x2 y2))))
+
+(defclass geom-line (geom-path) ())
+
+;; geom-line will need build-pipeline to sort by X, 
+;; but for now geom-draw will just inherit from geom-path.
+
 (defun geom_point (&rest params &key mapping data &allow-other-keys)
   (let ((p (copy-list params)))
     (remf p :mapping)
@@ -37,6 +66,28 @@
     (make-instance 'layer
                    :geom (make-instance 'geom-point)
                    :stat (geom-default-stat (make-instance 'geom-point))
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_path (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-path)
+                   :stat (stat_identity)
+                   :mapping mapping
+                   :data data
+                   :params p)))
+
+(defun geom_line (&rest params &key mapping data &allow-other-keys)
+  (let ((p (copy-list params)))
+    (remf p :mapping)
+    (remf p :data)
+    (make-instance 'layer
+                   :geom (make-instance 'geom-line)
+                   :stat (stat_identity)
                    :mapping mapping
                    :data data
                    :params p)))

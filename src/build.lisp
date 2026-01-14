@@ -5,8 +5,6 @@
   (let* ((data (plot-data plot))
          (layers (plot-layers plot))
          (margin 50)
-         (panel-w (- width (* 2 margin)))
-         (panel-h (- height (* 2 margin)))
          ;; 1. Train scales
          (scales (make-hash-table)))
     
@@ -19,9 +17,13 @@
       (let* ((l-data (or (layer-data l) data))
              (l-mapping (or (layer-mapping l) (plot-mapping plot))))
         (dolist (channel '(:x :y))
-          (let* ((col-selector (slot-value l-mapping channel))
-                 (col-name (if (keywordp col-selector) (string col-selector) col-selector))
-                 (values (cl-tibble:tb-col l-data col-name)))
+          (let* ((col-selector (ecase channel
+                                 (:x (aes-x l-mapping))
+                                 (:y (aes-y l-mapping))))
+                 (col-name (if (keywordp col-selector) 
+                               (string-downcase (string col-selector))
+                               col-selector))
+                 (values (cl-tibble:tbl-col l-data col-name)))
             (scale-train (gethash channel scales) values)))))
 
     ;; 2. Map data to coordinates per layer
@@ -33,15 +35,35 @@
                          (mapped-data (make-hash-table)))
                     ;; For x and y, map to screen positions
                     (dolist (c '(:x :y))
-                      (let* ((selector (slot-value l-mapping c))
-                             (col-name (if (keywordp selector) (string selector) selector))
-                             (vals (cl-tibble:tb-col l-data col-name))
+                      (let* ((selector (ecase c
+                                         (:x (aes-x l-mapping))
+                                         (:y (aes-y l-mapping))))
+                             (col-name (if (keywordp selector)
+                                           (string-downcase (string selector))
+                                           selector))
+                             (vals (cl-tibble:tbl-col l-data col-name))
                              (scale (gethash c scales)))
                         (setf (gethash c mapped-data)
                               (if (eq c :x)
                                   (scale-map scale vals margin (- width margin))
                                   ;; SVG Y is top-down, so invert mapping
                                   (scale-map scale vals (- height margin) margin)))))
+                    
+                    ;; Milestone 5: Sort by X for geom_line
+                    (when (typep (layer-geom l) 'geom-line)
+                      (let* ((x-vals (gethash :x mapped-data))
+                             (y-vals (gethash :y mapped-data))
+                             (indices (cl-vctrs-lite:with-na-handling ; just in case
+                                        (let ((idx (loop for i from 0 below (length x-vals) collect i)))
+                                          (sort idx #'< :key (lambda (i) (aref x-vals i))))))
+                             (new-x (make-array (length x-vals) :element-type (array-element-type x-vals)))
+                             (new-y (make-array (length y-vals) :element-type (array-element-type y-vals))))
+                        (loop for i from 0 for original-idx in indices
+                              do (setf (aref new-x i) (aref x-vals original-idx)
+                                       (aref new-y i) (aref y-vals original-idx)))
+                        (setf (gethash :x mapped-data) new-x
+                              (gethash :y mapped-data) new-y)))
+
                     ;; For others (color, etc.), just pick params or defaults for now
                     (dolist (c '(:color :size :alpha))
                       (setf (gethash c mapped-data) (getf (layer-params l) c)))
