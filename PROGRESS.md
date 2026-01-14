@@ -78,6 +78,22 @@
 - `src/build.lisp`
 - `test/build-tests.lisp`
 
+## Milestone 6: Scales (Discrete/Categorical) (Completed: 2026-01-14)
+
+### New Features
+- **Discrete Scales**: Added `scale-discrete` for non-numeric data (strings, symbols).
+- **Domain Learning**: Automatically extracts unique values in order of appearance.
+- **Equidistant Mapping**: Maps discrete categories to evenly spaced points across the output range.
+
+### Verification Results
+- 3 new tests in `test/scale-discrete-tests.lisp` covering training, linear mapping, and breaks.
+- `make test` passes without warnings.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/scale.lisp`
+- `test/scale-discrete-tests.lisp`
+
 ## Milestone 5: Geom Line & Path (Completed: 2026-01-14)
 
 ### New Features

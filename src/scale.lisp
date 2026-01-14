@@ -88,14 +88,9 @@
 
 (defmethod scale-map ((s scale-discrete) values range-min range-max)
   (let* ((domain (scale-domain s))
-         (n (length domain))
-         (padding (scale-padding s)))
+         (n (length domain)))
     (if (> n 0)
-        (let* ((total-units (+ n (* 2 (- padding 0.5)) 0)) ; Simple version: each category is 1 unit
-               ;; range = [min, max]
-               ;; Categorical positions are 1, 2, ..., n
-               ;; We map 1 to min + offset, n to max - offset
-               (step (if (> n 1) (/ (- range-max range-min) (1- n)) 0)))
+        (let ((step (if (> n 1) (/ (- range-max range-min) (1- n)) 0)))
           (cl-vctrs-lite:col-map
            (lambda (v)
              (if (cl-vctrs-lite:na-p v)
