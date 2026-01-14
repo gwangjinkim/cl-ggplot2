@@ -19,6 +19,10 @@
    #:geom_histogram
    #:geom_boxplot
    #:geom_smooth
+   #:geom_text
+   #:geom_segment
+   #:geom_rect
+   #:annotate
 
    ;; Stats
    #:stat_identity

@@ -16,7 +16,10 @@
    (ymax :initarg :ymax :initform nil :accessor aes-ymax)
    (middle :initarg :middle :initform nil :accessor aes-middle)
    (lower :initarg :lower :initform nil :accessor aes-lower)
-   (upper :initarg :upper :initform nil :accessor aes-upper)))
+   (upper :initarg :upper :initform nil :accessor aes-upper)
+   (label :initarg :label :initform nil :accessor aes-label)
+   (xend :initarg :xend :initform nil :accessor aes-xend)
+   (yend :initarg :yend :initform nil :accessor aes-yend)))
 
 (defclass layer ()
   ((geom :initarg :geom :accessor layer-geom)
