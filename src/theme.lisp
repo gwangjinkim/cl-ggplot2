@@ -23,16 +23,23 @@
 (defclass theme ()
   ((panel-fill :initarg :panel-fill :initform "#f0f0f0" :accessor theme-panel-fill)
    (panel-stroke :initarg :panel-stroke :initform "#cccccc" :accessor theme-panel-stroke)
-   (axis-line-color :initarg :axis-line-color :initform "black" :accessor theme-axis-line-color)
    (grid-color :initarg :grid-color :initform "#ffffff" :accessor theme-grid-color)
+   (grid-color-minor :initarg :grid-color-minor :initform "#f5f5f5" :accessor theme-grid-color-minor)
+   (axis-line-color :initarg :axis-line-color :initform "black" :accessor theme-axis-line-color)
+   (axis-text-color :initarg :axis-text-color :initform "#333333" :accessor theme-axis-text-color)
+   (axis-text-size :initarg :axis-text-size :initform 10 :accessor theme-axis-text-size)
+   (axis-tick-color :initarg :axis-tick-color :initform "black" :accessor theme-axis-tick-color)
    (text-color :initarg :text-color :initform "black" :accessor theme-text-color)))
 
 (defun theme_minimal ()
   (make-instance 'theme
                  :panel-fill "none"
                  :panel-stroke "none"
+                 :grid-color "#f0f0f0"
+                 :grid-color-minor "#f8f8f8"
                  :axis-line-color "#333333"
-                 :grid-color "#eeeeee"))
+                 :axis-text-color "#555555"
+                 :axis-tick-color "black"))
 
 (defmethod apply-to-plot ((t-obj theme) (p plot))
   (setf (plot-theme p) t-obj)

@@ -27,6 +27,5 @@
   (let ((s (make-instance 'cl-ggplot2::scale-continuous :channel :x)))
     (cl-ggplot2:scale-train s #(0 10))
     (let ((breaks (cl-ggplot2:scale-breaks s)))
-      (is (= 5 (length breaks)))
-      (is (= 0.0d0 (first (first breaks))))
-      (is (equal "0.0" (second (first breaks)))))))
+      (is (= 6 (length breaks)))
+      (is (= 0.0 (first breaks))))))

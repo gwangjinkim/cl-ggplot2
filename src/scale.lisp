@@ -54,15 +54,32 @@
         ;; Fallback for single value or no data
         (cl-vctrs-lite:col-map (constantly range-min) values))))
 
+(defun %nice-num (range round)
+  (let* ((exponent (floor (log range 10)))
+         (fraction (/ range (expt 10 exponent)))
+         (nice-fraction (if round
+                            (cond ((< fraction 1.5) 1)
+                                  ((< fraction 3) 2)
+                                  ((< fraction 7) 5)
+                                  (t 10))
+                            (cond ((<= fraction 1) 1)
+                                  ((<= fraction 2) 2)
+                                  ((<= fraction 5) 5)
+                                  (t 10)))))
+    (* nice-fraction (expt 10 exponent))))
+
 (defun default-breaks (domain)
   (destructuring-bind (d-min d-max) domain
-    (if (and d-min d-max)
-        (let* ((count 5)
-               (step (/ (- d-max d-min) (1- count))))
-          (loop for i from 0 below count
-                for val = (+ d-min (* i step))
-                collect (list val (fmt-float val))))
-        nil)))
+    (if (and d-min d-max (not (= d-min d-max)))
+        (let* ((range (%nice-num (- d-max d-min) nil))
+               (step (%nice-num (/ range 4) t))
+               (graph-min (* (floor (/ d-min step)) step))
+               (graph-max (* (ceiling (/ d-max step)) step)))
+          (loop for val from graph-min to graph-max by step
+                collect val))
+        (if (and d-min d-max)
+            (list d-min)
+            nil))))
 
 (defmethod scale-breaks ((s scale-continuous))
   (funcall (scale-breaks-fn s) (or (scale-limits s) (scale-domain s))))
@@ -103,8 +120,7 @@
         (cl-vctrs-lite:col-map (constantly range-min) values))))
 
 (defmethod scale-breaks ((s scale-discrete))
-  (loop for v in (scale-domain s)
-        collect (list v (format nil "~a" v))))
+  (scale-domain s))
 
 
 ;;; --- Constructors ---

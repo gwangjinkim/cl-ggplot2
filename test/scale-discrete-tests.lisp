@@ -19,5 +19,4 @@
     (cl-ggplot2:scale-train s #("A" "B"))
     (let ((breaks (cl-ggplot2:scale-breaks s)))
       (is (= 2 (length breaks)))
-      (is (equal "A" (first (first breaks))))
-      (is (equal "A" (second (first breaks)))))))
+      (is (equal "A" (first breaks))))))

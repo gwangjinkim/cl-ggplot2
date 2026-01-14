@@ -20,3 +20,10 @@
     (is (cl-ppcre:scan "viewBox=\"0 0 600.0 400.0\"" output))
     (is (cl-ppcre:scan "<rect" output)) ; panel
     (is (>= (length (cl-ppcre:all-matches-as-strings "<line" output)) 2)))) ; 2 axes
+
+(test test-render-alpha
+  (let* ((data (cl-tibble:tibble :x #(1) :y #(1)))
+         (p (gg (data (aes :x :x :y :y))
+              (geom_point :alpha 0.5)))
+         (output (render p :device :svg)))
+    (is (cl-ppcre:scan "opacity=\"0.5\"" output))))

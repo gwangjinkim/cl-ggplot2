@@ -164,21 +164,52 @@
     (when y-lab
       (r-text renderer (/ margin 4) (/ height 2) (format nil "~a" y-lab) :anchor "middle" :angle -90 :font-size 12))))
 
-(defun draw-plot-skeleton (plot renderer width height)
+(defun draw-plot-skeleton (plot renderer width height built-scales)
   "Internal function to draw axes and panel area."
   (let* ((margin 50)
-         (theme (or (plot-theme plot) (make-instance 'theme))))
+         (theme (or (plot-theme plot) (make-instance 'theme)))
+         (x-scale (gethash :x built-scales))
+         (y-scale (gethash :y built-scales)))
     ;; Background panel
     (r-set-style renderer :fill (theme-panel-fill theme) :stroke (theme-panel-stroke theme) :stroke-width 1)
     (r-rect renderer margin margin (- width (* 2 margin)) (- height (* 2 margin)))
     
-    ;; Gridlines (horizontal)
+    ;; 1. Gridlines & Axes
     (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
-    (loop for i from 1 to 3
-          for y = (+ margin (* i (/ (- height (* 2 margin)) 4)))
-          do (r-line renderer margin y (- width margin) y))
+    
+    ;; Y-axis breaks & grid
+    (when y-scale
+      (let ((breaks (scale-breaks y-scale)))
+        (dolist (b breaks)
+          (let ((y (scale-map y-scale (vector b) (- height margin) margin)))
+            (setf y (aref y 0))
+            ;; Grid line
+            (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
+            (r-line renderer margin y (- width margin) y)
+            ;; Tick
+            (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
+            (r-line renderer (- margin 5) y margin y)
+            ;; Label
+            (r-set-style renderer :fill (theme-axis-text-color theme))
+            (r-text renderer (- margin 10) y (format nil "~a" b) :anchor "end" :font-size (theme-axis-text-size theme))))))
 
-    ;; Axes placeholders
+    ;; X-axis breaks & grid
+    (when x-scale
+      (let ((breaks (scale-breaks x-scale)))
+        (dolist (b breaks)
+          (let ((x (scale-map x-scale (vector b) margin (- width margin))))
+            (setf x (aref x 0))
+            ;; Grid line
+            (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
+            (r-line renderer x margin x (- height margin))
+            ;; Tick
+            (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
+            (r-line renderer x (- height margin) x (+ (- height margin) 5))
+            ;; Label
+            (r-set-style renderer :fill (theme-axis-text-color theme))
+            (r-text renderer x (+ (- height margin) 15) (format nil "~a" b) :anchor "middle" :font-size (theme-axis-text-size theme))))))
+
+    ;; Axes lines
     (r-set-style renderer :stroke (theme-axis-line-color theme) :stroke-width 1)
     ;; X axis
     (r-line renderer margin (- height margin) (- width margin) (- height margin))
@@ -195,7 +226,7 @@
                     (:svg (make-instance 'svg-renderer))))
         (built (build-plot plot width height)))
     (r-begin renderer width height)
-    (draw-plot-skeleton plot renderer width height)
+    (draw-plot-skeleton plot renderer width height (getf built :scales))
     (dolist (bl (getf built :layers))
       (let ((layer (getf bl :layer))
             (data (getf bl :data)))

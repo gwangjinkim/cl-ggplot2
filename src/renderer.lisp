@@ -61,11 +61,14 @@
 
 (defun %svg-style-to-attrs (style)
   (with-output-to-string (s)
-    (destructuring-bind (&key stroke fill stroke-width opacity) style
+    (destructuring-bind (&key stroke fill stroke-width opacity fill-opacity stroke-opacity dash-array) style
       (when stroke (format s " stroke=\"~a\"" stroke))
       (when fill (format s " fill=\"~a\"" fill))
       (when stroke-width (format s " stroke-width=\"~a\"" (fmt-float stroke-width)))
-      (when opacity (format s " opacity=\"~a\"" (fmt-float opacity))))))
+      (when opacity (format s " opacity=\"~a\"" (fmt-float opacity)))
+      (when fill-opacity (format s " fill-opacity=\"~a\"" (fmt-float fill-opacity)))
+      (when stroke-opacity (format s " stroke-opacity=\"~a\"" (fmt-float stroke-opacity)))
+      (when dash-array (format s " stroke-dasharray=\"~a\"" dash-array)))))
 
 (defmethod r-set-style ((r svg-renderer) &rest style)
   (setf (r-style r) style))
