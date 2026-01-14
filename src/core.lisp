@@ -30,6 +30,7 @@
   ((data :initarg :data :accessor plot-data)
    (mapping :initarg :mapping :initform nil :accessor plot-mapping)
    (layers :initarg :layers :initform (list) :accessor plot-layers)
+   (scales :initarg :scales :initform nil :accessor plot-scales) ; list or hash-table
    (theme :initarg :theme :initform nil :accessor plot-theme)
    (coord :initarg :coord :initform nil :accessor plot-coord)
    (facet :initarg :facet :initform nil :accessor plot-facet)
@@ -40,4 +41,8 @@
    (labels :initarg :labels :initform (list) :accessor plot-labels)))
 
 (defun ggplot (data &optional mapping)
-  (make-instance 'plot :data data :mapping mapping))
+  (make-instance 'plot :data data :mapping mapping :scales (make-hash-table)))
+
+(defmethod initialize-instance :after ((p plot) &key &allow-other-keys)
+  (unless (slot-boundp p 'scales)
+    (setf (slot-value p 'scales) (make-hash-table))))

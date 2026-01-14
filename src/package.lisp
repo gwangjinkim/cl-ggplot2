@@ -44,6 +44,11 @@
    #:position_dodge
    #:position_fill
 
+   ;; Coordinates
+   #:coord_cartesian
+   #:coord_flip
+   #:coord_fixed
+
    ;; Themes & Labels
    #:theme_minimal
    #:theme_ggplot2_approx

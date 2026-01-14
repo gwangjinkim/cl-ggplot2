@@ -37,6 +37,6 @@
     (is (= 5 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
     ;; A has count 3, B/C have count 1.
     ;; They should have different heights.
-    (let ((heights (mapcar (lambda (s) (cl-ppcre:register-groups-bind (h) ("height=\"([^\"]+)\"" h))
+    (let ((heights (mapcar (lambda (s) (cl-ppcre:register-groups-bind (h) ("height=\"([^\"]+)\"" s) h))
                            (cl-ppcre:all-matches-as-strings "<rect [^>]*height=\"[^\"]+\"" output))))
        (is (>= (length (remove-duplicates heights :test #'string=)) 2)))))

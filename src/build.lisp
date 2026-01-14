@@ -40,8 +40,10 @@
   (let* ((data (plot-data plot))
          (layers (plot-layers plot))
          (facet (plot-facet plot))
+         (coord (or (plot-coord plot) (coord_cartesian)))
          (margin 50)
-         (scales (make-hash-table)))
+         ;; Initialize scales from plot
+         (scales (plot-scales plot)))
     
     ;; 1. Facet Resolution
     (let* ((facet-var (when facet (facet-facets facet)))
@@ -56,9 +58,10 @@
            (panels nil))
 
       ;; 2. Stat Computation & Global Scale Training
-      ;; We must compute stats for each layer in each panel, then train scales on ALL data.
+      ;; Ensure basic scales exist if not already provided
       (dolist (c '(:x :y))
-        (setf (gethash c scales) (make-instance 'scale-continuous :channel c)))
+        (unless (gethash c scales)
+          (setf (gethash c scales) (make-instance 'scale-continuous :channel c))))
 
       (loop for p-val in panel-values
             for p-idx from 0
@@ -68,7 +71,6 @@
                       (p-y (+ margin (* p-row panel-height)))
                       (p-tibble (getf split-data p-val))
                       (p-layers nil))
-                 (declare (ignore p-x p-y))
                  (dolist (l layers)
                    (let* ((l-data (or (layer-data l) p-tibble))
                           (l-mapping (or (layer-mapping l) (plot-mapping plot)))
@@ -112,8 +114,6 @@
                                     (constant-override (getf (layer-params l) channel))
                                     (pos-val (gethash channel pos-data)))
                                (let ((values (cond
-                                               ;; Training: prefer pos-val for coordinates
-                                               ;; If we have xmin/xmax, don't train on :x.
                                                ((and (member channel '(:x :y))
                                                      (or (gethash :xmin pos-data) (gethash :ymin pos-data)))
                                                 nil)
@@ -151,6 +151,10 @@
                            (p-y (getf p :y))
                            (p-w (getf p :width))
                            (p-h (getf p :height))
+                           ;; Coordinate-dependent ranges
+                           (coord-map (coord-map-scales coord scales p-x p-y p-w p-h))
+                           (x-range (getf coord-map :x-range))
+                           (y-range (getf coord-map :y-range))
                            (p-layers
                              (loop for pl in (getf p :layers)
                                    collect
@@ -173,8 +177,8 @@
                                                              pos-val)))
                                               (setf (gethash c mapped-data)
                                                     (case c
-                                                      ((:x :xmin :xmax) (scale-map scale vals p-x (+ p-x p-w)))
-                                                      ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (+ p-y p-h) p-y))
+                                                      ((:x :xmin :xmax) (scale-map scale vals (first x-range) (second x-range)))
+                                                      ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (first y-range) (second y-range)))
                                                       (t (scale-map scale vals 0 1))))))
                                            (constant (setf (gethash c mapped-data) constant))
                                            (selector
@@ -185,16 +189,18 @@
                                                                            (t c)) scales)))
                                               (setf (gethash c mapped-data)
                                                     (case c
-                                                      ((:x :xmin :xmax) (scale-map scale vals p-x (+ p-x p-w)))
-                                                      ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (+ p-y p-h) p-y))
+                                                      ((:x :xmin :xmax) (scale-map scale vals (first x-range) (second x-range)))
+                                                      ((:y :ymin :ymax :middle :lower :upper) (scale-map scale vals (first y-range) (second y-range)))
                                                       (t (scale-map scale vals 0 1))))))
                                            (t nil))))
-                                     (list :layer l :data mapped-data)))))
+                                     ;; Final coordinate transform (e.g. flip)
+                                     (list :layer l :data (coord-transform-mapped coord mapped-data))))))
                       (list :value (getf p :value) :x p-x :y p-y :width p-w :height p-h :layers p-layers)))))
         
         (list :panels built-panels :scales scales :ncol ncol :nrow nrow :panel-width panel-width :panel-height panel-height)))))
 
 (defun %draw-labels (plot renderer width height margin)
+  (declare (ignore margin))
   (let ((title (plot-title plot))
         (subtitle (plot-subtitle plot))
         (x-lab (plot-x-label plot))
@@ -213,14 +219,18 @@
 
 (defun draw-panel-skeleton (plot renderer p-info theme built-scales)
   "Draws background and grids for a single panel."
-  (let ((p-x (getf p-info :x))
-        (p-y (getf p-info :y))
-        (p-w (getf p-info :width))
-        (p-h (getf p-info :height))
-        (p-val (getf p-info :value))
-        (x-scale (gethash :x built-scales))
-        (y-scale (gethash :y built-scales)))
-    (declare (ignore plot))
+  (let* ((p-x (getf p-info :x))
+         (p-y (getf p-info :y))
+         (p-w (getf p-info :width))
+         (p-h (getf p-info :height))
+         (p-val (getf p-info :value))
+         (coord (or (plot-coord plot) (coord_cartesian)))
+         (x-scale (gethash :x built-scales))
+         (y-scale (gethash :y built-scales))
+         ;; Resolve ranges for labels/grids
+         (coord-map (coord-map-scales coord built-scales p-x p-y p-w p-h))
+         (x-range (getf coord-map :x-range))
+         (y-range (getf coord-map :y-range)))
     ;; Panel background
     (r-set-style renderer :fill (theme-panel-fill theme) :stroke (theme-panel-stroke theme) :stroke-width 1)
     (r-rect renderer p-x p-y p-w p-h)
@@ -236,30 +246,38 @@
     (when y-scale
       (let ((breaks (scale-breaks y-scale)))
         (dolist (b breaks)
-          (let ((y (scale-map y-scale (vector b) (+ p-y p-h) p-y)))
+          (let ((y (scale-map y-scale (vector b) (first y-range) (second y-range))))
             (setf y (aref y 0))
             (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
-            (r-line renderer p-x y (+ p-x p-w) y)
-            ;; Ticks/Labels only on first column or near left margin
-            (when (<= (abs (- p-x 50)) 2)
-              (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
-              (r-line renderer (- p-x 5) y p-x y)
-              (r-set-style renderer :fill (theme-axis-text-color theme))
-              (r-text renderer (- p-x 10) y (format nil "~a" b) :anchor "end" :font-size (theme-axis-text-size theme)))))))
+            ;; If flipped, y-scale values are mapped to horizontal pixels.
+            (if (typep coord 'coord-flip)
+                (r-line renderer y p-y y (+ p-y p-h))
+                (r-line renderer p-x y (+ p-x p-w) y))
+            ;; Ticks/Labels
+            (unless (typep coord 'coord-flip)
+              (when (<= (abs (- p-x 50)) 2)
+                (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
+                (r-line renderer (- p-x 5) y p-x y)
+                (r-set-style renderer :fill (theme-axis-text-color theme))
+                (r-text renderer (- p-x 10) y (format nil "~a" b) :anchor "end" :font-size (theme-axis-text-size theme))))))))
 
     ;; X-axis breaks & grid
     (when x-scale
       (let ((breaks (scale-breaks x-scale)))
         (dolist (b breaks)
-          (let ((x (scale-map x-scale (vector b) p-x (+ p-x p-w))))
+          (let ((x (scale-map x-scale (vector b) (first x-range) (second x-range))))
             (setf x (aref x 0))
             (r-set-style renderer :stroke (theme-grid-color theme) :stroke-width 1)
-            (r-line renderer x p-y x (+ p-y p-h))
-            ;; Ticks/Labels on bottom of each panel
-            (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
-            (r-line renderer x (+ p-y p-h) x (+ p-y p-h 5))
-            (r-set-style renderer :fill (theme-axis-text-color theme))
-            (r-text renderer x (+ p-y p-h 15) (format nil "~a" b) :anchor "middle" :font-size (theme-axis-text-size theme))))))
+            ;; If flipped, x-scale values are mapped to vertical pixels.
+            (if (typep coord 'coord-flip)
+                (r-line renderer p-x x (+ p-x p-w) x)
+                (r-line renderer x p-y x (+ p-y p-h)))
+            ;; Ticks/Labels
+            (unless (typep coord 'coord-flip)
+              (r-set-style renderer :stroke (theme-axis-tick-color theme) :stroke-width 1)
+              (r-line renderer x (+ p-y p-h) x (+ p-y p-h 5))
+              (r-set-style renderer :fill (theme-axis-text-color theme))
+              (r-text renderer x (+ p-y p-h 15) (format nil "~a" b) :anchor "middle" :font-size (theme-axis-text-size theme)))))))
 
     ;; Axes lines
     (r-set-style renderer :stroke (theme-axis-line-color theme) :stroke-width 1)
