@@ -21,3 +21,21 @@
 - `src/apply.lisp`
 - `src/operator.lisp`
 - `test/operator-tests.lisp`
+
+## Milestone 2: Renderer & SVG Skeleton (Completed: 2026-01-14)
+
+### New Features
+- **Renderer Protocol**: Defined a generic interface for drawing primitives (`r-rect`, `r-line`, `r-circle`, etc.).
+- **SVG Backend**: Implemented a deterministic SVG renderer with stable float formatting.
+- **Render API**: Added `render` and `save` functions to produce plot output.
+- **Plot Skeleton**: Implemented initial panel and axes drawing for the SVG output.
+
+### Verification Results
+- 2 new tests in `test/render-svg-tests.lisp` verifying SVG primitive generation and the plot skeleton.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/renderer.lisp`
+- `src/render-api.lisp`
+- `test/render-svg-tests.lisp`

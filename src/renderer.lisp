@@ -40,14 +40,12 @@
 
 (defun fmt-float (x)
   "Deterministic float formatting for SVG/snapshots."
-  (if (integerp x)
-      (format nil "~d" x)
-      (let ((s (format nil "~,3f" (coerce x 'double-float))))
-        ;; Trim trailing zeros but keep one if it is .0
-        (let ((trimmed (string-right-trim "0" s)))
-          (if (string-equal "." (subseq trimmed (1- (length trimmed))))
-              (concatenate 'string trimmed "0")
-              trimmed)))))
+  (let ((s (format nil "~,3f" (coerce x 'double-float))))
+    ;; Trim trailing zeros but keep one if it is .0
+    (let ((trimmed (string-right-trim "0" s)))
+      (if (string-equal "." (subseq trimmed (1- (length trimmed))))
+          (concatenate 'string trimmed "0")
+          trimmed))))
 
 (defmethod r-begin ((r svg-renderer) width height)
   (setf (r-width r) width (r-height r) height)

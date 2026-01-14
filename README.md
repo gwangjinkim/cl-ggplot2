@@ -4,6 +4,7 @@ A Common Lisp plotting library inspired by R’s **ggplot2**. It provides a **Gr
 
 ## Features (Current)
 - **Grammar of Graphics**: Construct plots using data, aesthetics, and layers.
+- **SVG Output**: Render plots to deterministic SVG files or strings.
 - **Lispy DSL**: Use the `gg` macro for declarative plot composition.
 - **Composable**: Chain components with the `-+` operator.
 

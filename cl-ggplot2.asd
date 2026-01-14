@@ -13,7 +13,8 @@
                  (:file "apply")
                  (:file "operator")
                  (:file "renderer")
-                 (:file "render-api"))))
+                 (:file "render-api")
+                 (:file "scale"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-ggplot2/test))))
 
 (asdf:defsystem #:cl-ggplot2/test
@@ -26,6 +27,7 @@
                 ((:file "package")
                  (:file "smoke-tests")
                  (:file "operator-tests")
-                 (:file "render-svg-tests"))))
+                 (:file "render-svg-tests")
+                 (:file "scale-tests"))))
   :perform (asdf:test-op (op c)
                          (uiop:symbol-call :fiveam :run! :cl-ggplot2)))
