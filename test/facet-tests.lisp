@@ -3,8 +3,9 @@
 (in-suite :cl-ggplot2)
 
 (test test-facet-resolution
-  (let* ((data (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) :gv #("A" "A" "B" "B")))
-         (p (gg (data (aes :x :x :y :y))
+  (let* ((df (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) :gv #("A" "A" "B" "B")))
+         (p (gg df
+              (aes :x :x :y :y)
               (geom_point)
               (facet_wrap :gv)))
          (built (cl-ggplot2::build-plot p 600 400)))
@@ -13,8 +14,9 @@
     (is (equal "B" (getf (second (getf built :panels)) :value)))))
 
 (test test-facet-render-svg
-  (let* ((data (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) :gv #("A" "A" "B" "B")))
-         (p (gg (data (aes :x :x :y :y))
+  (let* ((df (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) :gv #("A" "A" "B" "B")))
+         (p (gg df
+              (aes :x :x :y :y)
               (geom_point)
               (facet_wrap :gv :ncol 2)))
          (output (render p :device :svg)))

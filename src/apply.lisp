@@ -34,6 +34,10 @@
   (setf (plot-facet plot) item)
   plot)
 
+(defmethod apply-to-plot ((item mapping) (plot plot))
+  (setf (plot-mapping plot) item)
+  plot)
+
 ;; Fallback for NIL (useful in macros)
 (defmethod apply-to-plot ((item null) (plot plot))
   plot)

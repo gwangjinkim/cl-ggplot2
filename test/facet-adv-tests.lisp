@@ -3,10 +3,11 @@
 (in-suite :cl-ggplot2)
 
 (test test-facet-grid-layout
-  (let* ((data (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) 
+  (let* ((df (cl-tibble:tibble :x #(1 2 3 4) :y #(10 20 30 40) 
                                 :rv #("R1" "R1" "R2" "R2")
                                 :cv #("C1" "C2" "C1" "C2")))
-         (p (gg (data (aes :x :x :y :y))
+         (p (gg df
+              (aes :x :x :y :y)
               (geom_point)
               (facet_grid :rows :rv :cols :cv)))
          (built (cl-ggplot2::build-plot p 600 400)))
@@ -21,8 +22,9 @@
       (is (= 0 (getf p1 :col))))))
 
 (test test-facet-free-scales
-  (let* ((data (cl-tibble:tibble :x #(1 2 100 200) :y #(1 1 1 1) :gv #("A" "A" "B" "B")))
-         (p (gg (data (aes :x :x :y :y))
+  (let* ((df (cl-tibble:tibble :x #(1 2 100 200) :y #(1 1 1 1) :gv #("A" "A" "B" "B")))
+         (p (gg df
+              (aes :x :x :y :y)
               (geom_point)
               (facet_wrap :gv :scales :free_x)))
          (built (cl-ggplot2::build-plot p 600 400))

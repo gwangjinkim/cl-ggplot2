@@ -3,10 +3,11 @@
 (in-suite :cl-ggplot2)
 
 (test test-position-dodge
-  (let* ((data (cl-tibble:tibble :x #(1 1 2 2)
+  (let* ((df (cl-tibble:tibble :x #(1 1 2 2)
                                  :y #(10 20 5 15)
                                  :g #("G1" "G2" "G1" "G2")))
-         (p (gg (data (aes :x :x :y :y :fill :g))
+         (p (gg df
+              (aes :x :x :y :y :fill :g)
               (geom_col :position :dodge)))
          (output (render p :device :svg)))
     ;; 4 bars + 1 global bg + 1 panel bg + 2 legend keys = 8 rects
@@ -18,10 +19,11 @@
       (is (>= (length (remove-duplicates x-coords :test #'string=)) 4)))))
 
 (test test-position-fill
-  (let* ((data (cl-tibble:tibble :x #(1 1)
+  (let* ((df (cl-tibble:tibble :x #(1 1)
                                  :y #(10 30)
                                  :g #("G1" "G2")))
-         (p (gg (data (aes :x :x :y :y :fill :g))
+         (p (gg df
+              (aes :x :x :y :y :fill :g)
               (geom_col :position :fill)))
          (output (render p :device :svg)))
     ;; Height for 30/40 (0.75) segment should be 3/4 of the total panel height.
@@ -29,8 +31,9 @@
     (is (cl-ppcre:scan "height=\"225" output))))
 
 (test test-geom-bar-stat-count-new
-  (let* ((data (cl-tibble:tibble :x #("A" "A" "B" "A" "C")))
-         (p (gg (data (aes :x :x))
+  (let* ((df (cl-tibble:tibble :x #("A" "A" "B" "A" "C")))
+         (p (gg df
+              (aes :x :x)
               (geom_bar)))
          (output (render p :device :svg)))
     ;; Verify we have 3 bars. 3 bars + 1 panel + 1 global = 5 rects (no legend).
