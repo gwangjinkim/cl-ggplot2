@@ -193,3 +193,26 @@
 - `src/geom.lisp`
 - `src/build.lisp`
 - `test/geom-line-tests.lisp`
+
+## Milestone 12: Faceting with `facet_wrap` (Completed: 2026-01-14)
+
+### New Features
+- **Faceting Infrastructure**: Added `facet_wrap` and the `facet-wrap` class.
+- **Multi-Panel Build Pipeline**: `build-plot` now splits data by facet variables and calculates coordinates for multiple panels.
+- **Global Scale Training**: Scales are now trained globally across all panels to ensure visual consistency.
+- **Panel Skeletons**: Each facet panel is drawn with its own background, gridlines, and "strip" (facet label).
+- **Coordinate Mapping**: Data is mapped to panel-specific coordinates within the global SVG canvas.
+
+### Verification Results
+- 2 new tests in `test/facet-tests.lisp` verifying facet resolution and SVG rendering.
+- Updated 15+ existing tests to account for the new panel-based structure.
+- All tests pass (`make test`).
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/core.lisp`
+- `src/facet.lisp`
+- `src/build.lisp`
+- `src/geom.lisp`
+- `test/facet-tests.lisp`

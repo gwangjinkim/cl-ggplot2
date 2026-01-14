@@ -7,8 +7,8 @@
          (p (gg (data (aes :x :x))
               (geom_bar)))
          (output (render p :device :svg)))
-    ;; Should have 3 bars for A, B, C + 1 background = 4.
-    (is (= 4 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
+    ;; Should have 3 bars for A, B, C + 1 global bg + 1 panel bg = 5.
+    (is (= 5 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
     ;; A should have height proportional to 3, B to 1, C to 1.
     ;; In our skeleton, margin=50, total-h=400. y-axis at 350.
     ;; stat_count builds :x (A B C) :y (3 1 1).
@@ -28,12 +28,12 @@
          (p (gg (data (aes :x :x :y :y))
               (geom_col)))
          (output (render p :device :svg)))
-    (is (= 3 (length (cl-ppcre:all-matches-as-strings "<rect" output))))))
+    (is (= 4 (length (cl-ppcre:all-matches-as-strings "<rect" output))))))
 
 (test test-geom-tile
   (let* ((data (cl-tibble:tibble :x #(1 2) :y #(1 2)))
          (p (gg (data (aes :x :x :y :y))
               (geom_tile)))
          (output (render p :device :svg)))
-    (is (= 3 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
+    (is (= 4 (length (cl-ppcre:all-matches-as-strings "<rect" output))))
     (is (cl-ppcre:scan "fill=\"red\"" output))))

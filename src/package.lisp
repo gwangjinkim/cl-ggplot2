@@ -42,6 +42,7 @@
    #:theme_minimal
    #:theme_ggplot2_approx
    #:labs
+   #:facet_wrap
 
    ;; Output
    #:render

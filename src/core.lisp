@@ -32,6 +32,7 @@
    (layers :initarg :layers :initform (list) :accessor plot-layers)
    (theme :initarg :theme :initform nil :accessor plot-theme)
    (coord :initarg :coord :initform nil :accessor plot-coord)
+   (facet :initarg :facet :initform nil :accessor plot-facet)
    (title :initarg :title :initform nil :accessor plot-title)
    (subtitle :initarg :subtitle :initform nil :accessor plot-subtitle)
    (x-label :initarg :x-label :initform nil :accessor plot-x-label)

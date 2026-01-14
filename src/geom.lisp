@@ -70,6 +70,22 @@
 
 (defclass geom-line (geom-path) ())
 
+(defmethod geom-draw ((g geom-line) layer-data renderer)
+  "geom-line is geom-path but sorts data by x."
+  (let* ((x-col (gethash :x layer-data))
+         (indices (loop for i from 0 below (length x-col) collect i))
+         (sorted-indices (sort indices #'< :key (lambda (i) (aref x-col i))))
+         (new-data (make-hash-table)))
+    (loop for k being the hash-keys of layer-data using (hash-value v)
+          do (if (and (typep v 'sequence) (not (stringp v)))
+                 (let ((new-v (make-array (length v) :initial-element (elt v 0))))
+                   (loop for i from 0 below (length v)
+                         for idx = (elt sorted-indices i)
+                         do (setf (aref new-v i) (aref v idx)))
+                   (setf (gethash k new-data) new-v))
+                 (setf (gethash k new-data) v)))
+    (call-next-method g new-data renderer)))
+
 
 ;;; --- Bar/Tile ---
 

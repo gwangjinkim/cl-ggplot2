@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="600.0" height="300.0" viewBox="0 0 600.0 300.0" xmlns="http://www.w3.org/2000/svg">
+<rect x="0.0" y="0.0" width="600.0" height="300.0" stroke="none" fill="white" />
+<rect x="50.0" y="50.0" width="250.0" height="200.0" stroke="#cccccc" fill="#f0f0f0" stroke-width="1.0" />
+<rect x="50.0" y="50.0" width="250.0" height="20.0" stroke="#cccccc" fill="#eeeeee" stroke-width="1.0" />
+<text x="175.0" y="65.0" text-anchor="middle" font-size="10.0">A</text>
+<line x1="50.0" y1="250.0" x2="300.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="45.0" y1="250.0" x2="50.0" y2="250.0" stroke="black" stroke-width="1.0" />
+<text x="40.0" y="250.0" text-anchor="end" font-size="10.0">10</text>
+<line x1="50.0" y1="183.333" x2="300.0" y2="183.333" stroke="#ffffff" stroke-width="1.0" />
+<line x1="45.0" y1="183.333" x2="50.0" y2="183.333" stroke="black" stroke-width="1.0" />
+<text x="40.0" y="183.333" text-anchor="end" font-size="10.0">20</text>
+<line x1="50.0" y1="116.667" x2="300.0" y2="116.667" stroke="#ffffff" stroke-width="1.0" />
+<line x1="45.0" y1="116.667" x2="50.0" y2="116.667" stroke="black" stroke-width="1.0" />
+<text x="40.0" y="116.667" text-anchor="end" font-size="10.0">30</text>
+<line x1="50.0" y1="50.0" x2="300.0" y2="50.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="45.0" y1="50.0" x2="50.0" y2="50.0" stroke="black" stroke-width="1.0" />
+<text x="40.0" y="50.0" text-anchor="end" font-size="10.0">40</text>
+<line x1="50.0" y1="50.0" x2="50.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="50.0" y1="250.0" x2="50.0" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="50.0" y="265.0" text-anchor="middle" font-size="10.0">1</text>
+<line x1="133.333" y1="50.0" x2="133.333" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="133.333" y1="250.0" x2="133.333" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="133.333" y="265.0" text-anchor="middle" font-size="10.0">2</text>
+<line x1="216.667" y1="50.0" x2="216.667" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="216.667" y1="250.0" x2="216.667" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="216.667" y="265.0" text-anchor="middle" font-size="10.0">3</text>
+<line x1="300.0" y1="50.0" x2="300.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="250.0" x2="300.0" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="300.0" y="265.0" text-anchor="middle" font-size="10.0">4</text>
+<line x1="50.0" y1="250.0" x2="300.0" y2="250.0" stroke="black" stroke-width="1.0" />
+<line x1="50.0" y1="50.0" x2="50.0" y2="250.0" stroke="black" stroke-width="1.0" />
+<circle cx="50.0" cy="250.0" r="2.0" stroke="black" fill="black" opacity="1.0" />
+<circle cx="133.333" cy="183.333" r="2.0" stroke="black" fill="black" opacity="1.0" />
+<rect x="300.0" y="50.0" width="250.0" height="200.0" stroke="#cccccc" fill="#f0f0f0" stroke-width="1.0" />
+<rect x="300.0" y="50.0" width="250.0" height="20.0" stroke="#cccccc" fill="#eeeeee" stroke-width="1.0" />
+<text x="425.0" y="65.0" text-anchor="middle" font-size="10.0">B</text>
+<line x1="300.0" y1="250.0" x2="550.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="183.333" x2="550.0" y2="183.333" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="116.667" x2="550.0" y2="116.667" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="50.0" x2="550.0" y2="50.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="50.0" x2="300.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="300.0" y1="250.0" x2="300.0" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="300.0" y="265.0" text-anchor="middle" font-size="10.0">1</text>
+<line x1="383.333" y1="50.0" x2="383.333" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="383.333" y1="250.0" x2="383.333" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="383.333" y="265.0" text-anchor="middle" font-size="10.0">2</text>
+<line x1="466.667" y1="50.0" x2="466.667" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="466.667" y1="250.0" x2="466.667" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="466.667" y="265.0" text-anchor="middle" font-size="10.0">3</text>
+<line x1="550.0" y1="50.0" x2="550.0" y2="250.0" stroke="#ffffff" stroke-width="1.0" />
+<line x1="550.0" y1="250.0" x2="550.0" y2="255.0" stroke="black" stroke-width="1.0" />
+<text x="550.0" y="265.0" text-anchor="middle" font-size="10.0">4</text>
+<line x1="300.0" y1="250.0" x2="550.0" y2="250.0" stroke="black" stroke-width="1.0" />
+<line x1="300.0" y1="50.0" x2="300.0" y2="250.0" stroke="black" stroke-width="1.0" />
+<circle cx="466.667" cy="116.667" r="2.0" stroke="black" fill="black" opacity="1.0" />
+<circle cx="550.0" cy="50.0" r="2.0" stroke="black" fill="black" opacity="1.0" />
+</svg>
