@@ -4,15 +4,15 @@
 
 ;; Load local .asd from repo root
 (let* ((root (uiop:getcwd))
-       (asd  (merge-pathnames "cl-vctrs-lite.asd" root)))
+       (asd  (merge-pathnames "cl-ggplot2.asd" root)))
   (asdf:load-asd asd))
 
-(format t "~&[cl-vctrs-lite] running tests...~%")
+(format t "~&[cl-ggplot2] running tests...~%")
 
 (handler-case
     (progn
       ;; IMPORTANT: test-system (not load-system) so :perform test-op runs
-      (asdf:test-system :cl-vctrs-lite/test)
+      (asdf:test-system :cl-ggplot2/test)
       (format t "~&OK~%")
       (uiop:quit 0))
   (error (e)

@@ -26,8 +26,10 @@ For each milestone M0..MN:
 1) Write/adjust **FiveAM tests first**. Confirm they fail for the right reason.  
 2) Implement minimal code to pass tests.  
 3) Run: `make test` (canonical).  
-4) Summarize changes + list touched files.  
-5) STOP. Do not start next milestone unless asked.
+4) **Write a report about the new features into `PROGRESS.md`.**
+5) **Update `README.md` with new features and examples.**
+6) Summarize changes + list touched files.  
+7) STOP. Do not start next milestone unless asked.
 
 Constraints:
 - No refactors across unrelated modules.
@@ -171,6 +173,9 @@ All exported symbols are in `CL-GGPLOT2`.
 - `render`           ; (render plot &key device width height dpi) -> string/bytes
 - `save`             ; (save plot path &key device width height dpi)
 
+### 5.7 Lispy DSL (Macro)
+- `gg` or `with-plot` ; declarative macro for plot construction
+
 ---
 
 ## 6) The `-+` operator: exact semantics
@@ -203,6 +208,27 @@ Default methods:
 - `(-+ (ggplot d) (geom_point) (geom_line))` results in a plot with 2 layers in order
 - `-+` must be hygienic (no variable capture)
 - errors if first argument is not a plot
+
+---
+
+## 7) Lispy DSL: Declarative composition
+
+For a more "Lisp-native" feel, provide a macro that wraps the `-+` operator.
+
+### 7.1 The `with-plot` / `gg` macro
+Target syntax:
+```lisp
+(cl-ggplot2:gg (data mapping)
+  (geom_point :color :cyl)
+  (geom_smooth :method :lm)
+  (theme_minimal)
+  (labs :title "Car Performance"))
+```
+
+Semantics:
+- The first argument is a list `(data &optional mapping)`.
+- Subsequent forms are treated as layers or modifiers.
+- Expands to a `let` binding for the plot and a series of `apply-to-plot` calls (or a single `-+` call).
 
 ---
 
@@ -450,6 +476,43 @@ Implement:
 
 Stop after M8 unless asked.
 
+### M9 — Faceting: facet_wrap
+Implement:
+- basic `facet_wrap` layout
+- split data by categorical variable(s)
+- repeat geoms across panels
+
+### M10 — Position Adjustments
+Implement:
+- `position_dodge` (bar side-by-side)
+- `position_fill` (percentage stacks)
+- update `geom_bar` to support them
+
+### M11 — Coordinate Systems (basics)
+Implement:
+- `coord_flip` (swap x and y)
+- `coord_fixed` (fixed aspect ratio)
+
+### M12 — Advanced Stats
+Implement:
+- `stat_smooth` (LM/linear regression)
+- `stat_summary` (mean/median points)
+
+### M13 — Additional Aesthetics
+Implement:
+- `scale_size`, `scale_shape`, `scale_alpha`
+- mapping data to these channels in `aes`
+
+### M14 — Legends & Color Palettes
+Implement:
+- multi-legend layout (combining color, size, etc.)
+- integration with `cl-colors` or similar for Viridis/ColorBrewer
+
+### M15 — Annotations
+Implement:
+- `annotate` function for manual additions
+- `geom_text` for label mapping
+
 ---
 
 ## 14) Coding conventions
@@ -469,3 +532,5 @@ Stop after M8 unless asked.
 - API supports: scatter, line, bar, histogram
 - `-+` chaining works and is tested
 - output is deterministic enough for snapshot tests
+- **`PROGRESS.md` is updated with milestone results**
+- **`README.md` reflects current features**

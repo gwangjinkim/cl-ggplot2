@@ -46,11 +46,12 @@ So the goal should be:
 
 ### v0.2+
 - facets (`facet_wrap`, `facet_grid`)
-- more geoms (boxplot, area, smooth)
-- more stats (summary, smoothing)
-- guides/legends improvements
-- coordinate transforms (log scales, polar)
+- more geoms (boxplot, area, smooth, text)
+- more stats (summary, smoothing, bin2d)
+- guides/legends improvements (multi-aesthetic legends)
+- coordinate transforms (flip, fixed, polar basics)
 - interactive output (optional; via Vega-Lite export)
+- high-level declarative DSL (`gg` macro)
 
 ---
 
