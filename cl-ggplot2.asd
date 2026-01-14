@@ -14,7 +14,10 @@
                  (:file "operator")
                  (:file "renderer")
                  (:file "render-api")
-                 (:file "scale"))))
+                 (:file "scale")
+                 (:file "stat")
+                 (:file "geom")
+                 (:file "build"))))
   :in-order-to ((asdf:test-op (asdf:test-op #:cl-ggplot2/test))))
 
 (asdf:defsystem #:cl-ggplot2/test

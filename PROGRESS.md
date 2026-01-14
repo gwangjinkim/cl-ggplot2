@@ -39,3 +39,21 @@
 - `src/renderer.lisp`
 - `src/render-api.lisp`
 - `test/render-svg-tests.lisp`
+
+## Milestone 3: Scales (Continuous x/y) (Completed: 2026-01-14)
+
+### New Features
+- **Scale Protocol**: Defined `scale-train`, `scale-map`, and `scale-breaks` for learning and mapping data domains.
+- **Continuous Scales**: Implemented `scale-continuous` for numeric data.
+- **NA Handling**: Scales correctly propagate `*na*` during mapping.
+- **Breaks Generator**: Added a default breaks generator for axis ticks.
+
+### Verification Results
+- 4 new tests in `test/scale-tests.lisp` covering training, mapping, NA handling, and breaks.
+- `make test` passes.
+
+### Touched Files
+- `cl-ggplot2.asd`
+- `src/package.lisp`
+- `src/scale.lisp`
+- `test/scale-tests.lisp`

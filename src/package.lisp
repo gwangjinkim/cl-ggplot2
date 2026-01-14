@@ -21,6 +21,10 @@
    #:stat_bin
 
    ;; Scales
+   #:scale-train
+   #:scale-map
+   #:scale-breaks
+   #:scale-channel
    #:scale_x_continuous
    #:scale_y_continuous
    #:scale_x_discrete
