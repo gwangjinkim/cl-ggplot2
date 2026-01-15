@@ -1,6 +1,6 @@
 (asdf:defsystem #:cl-ggplot2
   :description "Grammar of Graphics for Common Lisp"
-  :author "Deepmind"
+  :author "Gwang-Jin Kim <gwang.jin.kim.phd@gmail.com>"
   :license "MIT"
   :depends-on (#:cl-tibble
                #:cl-vctrs-lite)
@@ -44,6 +44,7 @@
                  (:file "geom-stat-adv-tests")
                  (:file "facet-tests")
                  (:file "position-tests")
-                 (:file "coord-tests"))))
+                 (:file "coord-tests")
+                 (:file "macro-tests"))))
   :perform (asdf:test-op (op c)
                          (uiop:symbol-call :fiveam :run! :cl-ggplot2)))

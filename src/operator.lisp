@@ -9,12 +9,17 @@
 
 (defmacro gg (spec &rest body)
   "Declarative macro for plot construction."
-  (let ((data (if (and (listp spec) (eq (car spec) 'data))
-                  (cadr spec)
-                  (if (listp spec) (car spec) spec)))
-        (mapping (if (and (listp spec) (not (eq (car spec) 'data)))
-                     (cadr spec)
-                     nil)))
+  (let ((data nil)
+        (mapping nil))
+    (cond
+      ((and (listp spec) 
+            (symbolp (car spec)) 
+            (string-equal (symbol-name (car spec)) "DATA"))
+       (setf data (cadr spec)))
+      ((and (listp spec) (<= (length spec) 2))
+       (setf data (car spec)
+             mapping (cadr spec)))
+      (t (setf data spec)))
     `(-+ (ggplot ,data ,mapping)
          ,@body)))
 

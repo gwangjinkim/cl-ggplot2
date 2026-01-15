@@ -9,9 +9,9 @@
     (is (equal "cyl" (cl-ggplot2::aes-color m)))))
 
 (test test-ggplot-constructor
-  (let* ((data '((:mpg . 21) (:hp . 110)))
-         (p (ggplot data)))
-    (is (eq data (cl-ggplot2::plot-data p)))
+  (let* ((df '((:mpg . 21) (:hp . 110)))
+         (p (ggplot df)))
+    (is (eq df (cl-ggplot2::plot-data p)))
     (is (null (cl-ggplot2::plot-mapping p)))))
 
 (test test-apply-layer
@@ -32,9 +32,10 @@
     (is (eq l2 (second (cl-ggplot2::plot-layers p))))))
 
 (test test-gg-macro
-  (let* ((data '((:x . 1)))
-         (p (gg (data (aes :x "x"))
+  (let* ((df '((:x . 1)))
+         (p (gg df
+              (aes :x "x")
               (make-instance 'cl-ggplot2::layer :geom :point :stat :identity))))
-    (is (eq data (cl-ggplot2::plot-data p)))
+    (is (eq df (cl-ggplot2::plot-data p)))
     (is (not (null (cl-ggplot2::plot-mapping p))))
     (is (= 1 (length (cl-ggplot2::plot-layers p))))))
