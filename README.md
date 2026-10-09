@@ -19,7 +19,7 @@ For many years, plotting in Common Lisp has often felt like an exercise in imper
 
 ---
 
-## ⚡ Quickstart
+## Quickstart
 
 Constructing a plot is as simple as defining your data, mapping aesthetics (like $x$, $y$, and $color$), and choosing your geometry.
 
@@ -45,7 +45,7 @@ Constructing a plot is as simple as defining your data, mapping aesthetics (like
 
 ---
 
-## 🎨 The Tutorial: Thinking in Grammars
+## The Tutorial: Thinking in Grammars
 
 If you are new to the Grammar of Graphics, the mental model is centered on building a plot as a collection of independent components.
 
@@ -79,7 +79,7 @@ Faceting creates sub-plots based on a categorical variable.
 
 ---
 
-## 🚀 Extensive Use Case Examples
+## Extensive Use Case Examples
 
 ### Continuous Comparison with Color
 Map a categorical variable to color to see groupings in a scatter plot.
@@ -129,7 +129,7 @@ Use `geom_histogram` or `geom_tile` for frequency data or heatmaps.
 
 ---
 
-## 📝 Feature Reference
+## Feature Reference
 
 | Component | Fully Supported |
 | :--- | :--- |
@@ -142,7 +142,7 @@ Use `geom_histogram` or `geom_tile` for frequency data or heatmaps.
 
 ---
 
-## 🛠 Installation
+## Installation
 
 `cl-ggplot2` is designed for modern Common Lisp environments.
 
@@ -157,7 +157,7 @@ Use `geom_histogram` or `geom_tile` for frequency data or heatmaps.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! To run the test suite:
 

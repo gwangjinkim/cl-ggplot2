@@ -25,6 +25,9 @@ All notable changes to this project are documented here. Format follows
   documented in the docstring (topic: gg macro).
 
 ### Changed
+- Removed emojis from README.md (section headings) (maintainer preference: no emojis in
+  documentation). Meaning is kept in words where an emoji carried it
+  (topic: docs style).
 - Stopped tracking `build/` (48 files, 1.0M): the ASDF/Roswell compile
   cache that `make test` writes via `XDG_CACHE_HOME=$(PWD)/build`. It held
   compiled fasls, including Quicklisp internals and absolute local paths.
