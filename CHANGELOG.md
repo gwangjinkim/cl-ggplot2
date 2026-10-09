@@ -17,6 +17,13 @@ All notable changes to this project are documented here. Format follows
   `(gg (EXPR (aes ...)) ...)` work. The accepted spec shapes are
   documented in the docstring (topic: gg macro).
 
+### Changed
+- Stopped tracking `build/` (48 files, 1.0M): the ASDF/Roswell compile
+  cache that `make test` writes via `XDG_CACHE_HOME=$(PWD)/build`. It held
+  compiled fasls, including Quicklisp internals and absolute local paths.
+  `build/` is now in `.gitignore`; local files are untouched. Old copies
+  remain in history (topic: repo hygiene).
+
 ### Tests
 - `test-gg-macro-data-keyword` checked `(typep x 'cl-tibble:tibble)`;
   `tibble` is the constructor function, the class is `cl-tibble:tbl`.

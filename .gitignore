@@ -15,3 +15,6 @@
 *.sx32fsl
 *.wx64fsl
 *.wx32fsl
+
+# Local ASDF/Roswell compile cache (Makefile sets XDG_CACHE_HOME=$(PWD)/build)
+build/
