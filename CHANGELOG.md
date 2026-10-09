@@ -7,6 +7,8 @@ All notable changes to this project are documented here. Format follows
 ## [Unreleased]
 
 ### Added
+- `LICENSE` file (MIT, as declared in `cl-ggplot2.asd`), added before the
+  repository was first published on GitHub (topic: licence).
 - `:version "0.1.0"` in `cl-ggplot2.asd`; it was the only package in the
   stack without a version, so `(asdf:component-version ...)` and
   `tidyverse:tidyverse-packages` reported NIL for it (topic: versioning).
