@@ -25,6 +25,9 @@ All notable changes to this project are documented here. Format follows
   documented in the docstring (topic: gg macro).
 
 ### Changed
+- AGENTS.md: "Parity work" section listing this repository's parity
+  milestones (GG1, GG2, GG2B, GG3, GG4, GG5, GG6, GG7, GG8) and where the plan and backlog live
+  (topic: parity plan).
 - Removed emojis from README.md (section headings) (maintainer preference: no emojis in
   documentation). Meaning is kept in words where an emoji carried it
   (topic: docs style).
