@@ -2,6 +2,7 @@
   :description "Grammar of Graphics for Common Lisp"
   :author "Gwang-Jin Kim <gwang.jin.kim.phd@gmail.com>"
   :license "MIT"
+  :version "0.1.0"
   :depends-on (#:cl-tibble
                #:cl-vctrs-lite)
   :serial t

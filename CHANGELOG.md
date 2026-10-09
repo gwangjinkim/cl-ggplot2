@@ -6,6 +6,11 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
+### Added
+- `:version "0.1.0"` in `cl-ggplot2.asd`; it was the only package in the
+  stack without a version, so `(asdf:component-version ...)` and
+  `tidyverse:tidyverse-packages` reported NIL for it (topic: versioning).
+
 ### Fixed
 - **`(gg (df (aes ...)) ...)` broke whenever the data variable was named
   `data`.** Commit ca5706c ("fix gg unbound data") made any spec starting
