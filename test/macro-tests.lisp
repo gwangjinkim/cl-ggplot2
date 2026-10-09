@@ -7,7 +7,7 @@
               (aes :x :x :y :y)
               (geom_point))))
     (is (typep p 'cl-ggplot2::plot))
-    (is (typep (cl-ggplot2::plot-data p) 'cl-tibble:tibble))
+    (is (typep (cl-ggplot2::plot-data p) 'cl-tibble:tbl))
     (is (= 2 (length (cl-tibble:tbl-col (cl-ggplot2::plot-data p) "x"))))))
 
 (test test-gg-macro-positional

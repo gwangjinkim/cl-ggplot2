@@ -4,4 +4,4 @@
 (in-suite :cl-ggplot2)
 
 (test smoke-test
-  (is t))
+  (pass))

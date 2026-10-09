@@ -16,3 +16,9 @@ All notable changes to this project are documented here. Format follows
   element first, so both `(gg (data EXPR) ...)` and
   `(gg (EXPR (aes ...)) ...)` work. The accepted spec shapes are
   documented in the docstring (topic: gg macro).
+
+### Tests
+- `test-gg-macro-data-keyword` checked `(typep x 'cl-tibble:tibble)`;
+  `tibble` is the constructor function, the class is `cl-tibble:tbl`.
+- `smoke-test`: bare `(is t)` replaced by `(pass)` (current FiveAM rejects
+  it). Suite: 103/103 pass (was 59/78 before the gg fix).
